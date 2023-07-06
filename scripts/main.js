@@ -15,6 +15,26 @@ function drawArc(xPos, yPos, radius, startAngle, endAngle, lineWidth, anticlockw
   context.stroke();
 }
 
+class Theme
+{
+  fillColor = "DarkBlue";
+  lineColor = "MediumSlateBlue";
+  baseColor = "MediumSlateBlue";
+  baseHighlightedColor = "LightSeaGreen";
+  alternateColor = "DarkTurquoise";
+  alternateHighlightedColor = "DeepSkyBlue";
+
+  constructor()
+  {
+    if (Theme._instance)
+    {
+      return Theme._instance;
+    }
+
+    Theme._instance = this;
+  }
+}
+
 class CanvasRef
 {
   #canvas_ref;
@@ -43,6 +63,14 @@ class CanvasRef
       }
 
     return [canvasWidth, canvasHeight];
+  }
+
+  getMousePos(event) {
+    var rect = this.#canvas_ref.getBoundingClientRect();
+    return {
+        x: (event.clientX - rect.left) / (rect.right - rect.left) * this.#canvas_ref.width,
+        y: (event.clientY - rect.top) / (rect.bottom - rect.top) * this.#canvas_ref.height
+    };
   }
 }
 
@@ -122,6 +150,16 @@ class Circle
     }
   }
 
+  intersects(xPos, yPos)
+  {
+    if ((this.#xPos + this.#radius >= xPos) && (this.#xPos - this.#radius <= xPos))
+    {
+      if ((this.#yPos + this.#radius >= yPos) && (this.#yPos - this.#radius <= yPos))
+        return true;
+    }
+    return false;
+  }
+
   radius()
   {
     return this.#radius;
@@ -150,6 +188,66 @@ class Circle
   yPos()
   {
     return this.#yPos;
+  }
+}
+
+class Beat extends Circle
+{
+  #baseColor;
+  #highlightedColor;
+  #alternated = false;
+  #highlighted = false;
+
+  constructor(xPos, yPos, lineWidth, radius)
+  {
+    const theme = new Theme();
+    let lineColor = theme.baseColor;
+    let fillColor = theme.baseColor;
+    super(xPos, yPos, lineWidth, radius, lineColor, fillColor);
+    this.#baseColor = theme.baseColor;
+    this.#highlightedColor = theme.baseHighlightedColor;
+  }
+
+  changeColorPalette()
+  {
+    const theme = new Theme();
+    let newBaseColor;
+    let newHighlightedColor;
+    if (this.#alternated == true)
+    {
+      newBaseColor = theme.baseColor;
+      newHighlightedColor = theme.baseHighlightedColor;
+      this.#alternated = false;
+    }
+    else
+    {
+      newBaseColor = theme.alternateColor;
+      newHighlightedColor = theme.alternateHighlightedColor;
+      this.#alternated = true;
+    }
+
+    this.Redraw(newBaseColor, undefined, undefined, undefined, undefined, newBaseColor);
+    this.#baseColor = newBaseColor;
+    this.#highlightedColor = newHighlightedColor;
+
+  }
+
+  Highlight()
+  {
+    if (this.#highlighted == true)
+      return;
+
+    this.Redraw(this.#highlightedColor, undefined, undefined, undefined, undefined, this.#highlightedColor);
+    this.#highlighted = true;
+  }
+
+  makeNormal()
+  {
+    if (this.#highlighted == false)
+      return;
+
+    this.Redraw(this.#baseColor, undefined, undefined, undefined, undefined, this.#baseColor);
+    this.#highlighted = false;
   }
 }
 
@@ -206,6 +304,8 @@ class Metronom
   #mainCircle;
   #circles;
   #drawn = false;
+  #active = false;
+  #timer;
   constructor(tempo, beat, ticksPerBeat)
   {
     this.#tempo = tempo;
@@ -255,8 +355,36 @@ class Metronom
 
   highLightNext()
   {
-    this.#circles.current().Redraw("DarkBlue");
-    this.#circles.next().Redraw("MediumSlateBlue");
+    this.#circles.current().makeNormal();
+    this.#circles.next().Highlight();
+  }
+
+  checkForIntersections(xPos, yPos)
+  {
+    for(let i = 0; i < this.#circles.getLength(); i++)
+    {
+      if ( this.#circles.onIndex(i).intersects(xPos, yPos) == true )
+      {
+        this.#circles.onIndex(i).changeColorPalette();
+        break;
+      }
+    }
+  }
+
+  start()
+  {
+    if (this.#active == false)
+    {
+      let time = 60000 / this.#tempo;
+      const ref = this;
+      this.#timer = setInterval(() => ref.highLightNext(), time);
+      this.#active = true;
+    }
+    else
+    {
+      clearInterval(this.#timer);
+      this.#active = false;
+    }
   }
 
   #makeCircles()
@@ -264,13 +392,10 @@ class Metronom
     this.#mainCircle = this.#createMainCircle();
     this.#mainCircle.Draw();
     this.#createBeats();
-
   }
 
   #createBeats()
   {
-    let lineColor = this.#mainCircle.lineColor();
-    let fillColor = this.#mainCircle.fillColor();
     let lineWidth = this.#mainCircle.lineWidth();
     let mainRadius = this.#mainCircle.radius();
 
@@ -290,7 +415,7 @@ class Metronom
       let xPos = xCenter + mainRadius * Math.cos(initial_arc);
       let yPos = yCenter + mainRadius * Math.sin(initial_arc);
 
-      let temp = new Circle(xPos, yPos, lineWidth, radius, lineColor, fillColor);
+      let temp = new Beat(xPos, yPos, lineWidth, radius);
       this.#addCircle(temp)
     }
   }
@@ -309,24 +434,39 @@ class Metronom
     }
 
     let radius = (smallSide - lineWidth) * 0.9;
-    let lineColor = "MediumSlateBlue";
-    let fillColor = "DarkBlue";
+    let lineColor = theme.lineColor;
+    let fillColor = theme.fillColor;
 
     return new Circle(xCenter, yCenter, lineWidth, radius, lineColor, fillColor);
   }
 }
 
+function logPosition(object)
+{
+  console.log("x:" + object["x"]);
+  console.log("y:" + object["y"]);
+}
+
 
 canvas_reference = new CanvasRef(canvas);
+theme = new Theme();
 
-button = document.getElementById("myButton");
 
-const metronom = new Metronom(90, 5, 1);
+const metronom = new Metronom(300, 55, 1);
 metronom.drawAllCircles();
 
+canvas.addEventListener("mousedown", function(event)
+{
+  coordinates = canvas_reference.getMousePos(event);
+  metronom.checkForIntersections(coordinates["x"], coordinates["y"]);
+});
 
 
+button = document.getElementById("myButton");
 button.addEventListener("click", function(event) {metronom.drawAllCircles();});
 button.addEventListener("click", function(event) {metronom.highLightNext();});
+
+startButton = document.getElementById("startButton");
+startButton.addEventListener("click", function(event) {metronom.start();});
 
 window.addEventListener("resize", function(event) {metronom.redrawAllCircles();});
