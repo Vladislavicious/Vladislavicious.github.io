@@ -6,10 +6,10 @@ function drawArc(xPos, yPos, radius, startAngle, endAngle, lineWidth, anticlockw
   context.strokeStyle = lineColor;
   context.fillStyle = fillColor;
   context.lineWidth = lineWidth;
-context.beginPath();
-context.arc(xPos, yPos, radius, startAngle, endAngle, anticlockwise);
-context.fill();
-context.stroke();
+  context.beginPath();
+  context.arc(xPos, yPos, radius, startAngle, endAngle, anticlockwise);
+  context.fill();
+  context.stroke();
 }
 
 class CanvasRef
@@ -18,6 +18,12 @@ class CanvasRef
 
   constructor(canvas)
   {
+    if (CanvasRef._instance)
+    {
+      return CanvasRef._instance;
+    }
+
+    CanvasRef._instance = this;
     this.#canvas_ref = canvas;
   }
 
@@ -78,6 +84,60 @@ class Circle
     this.#drawn = false;
   }
 
+  #Redraw(xPos = null, yPos = null, lineWidth = null, radius = null, lineColor = null, fillColor = null)
+  {
+    if (xPos != null){
+      this.#xPos = xPos;
+    }
+    if (yPos != null){
+      this.#yPos = yPos;
+    }
+    if (lineWidth != null){
+      this.#lineWidth = lineWidth;
+    }
+    if (radius != null){
+      this.#radius = radius;
+    }
+    if (lineColor != null){
+      this.#lineColor = lineColor;
+    }
+    if (fillColor != null){
+      this.#fillColor = fillColor;
+    }
+
+    this.Clear();
+    this.Draw();
+  }
+
+  radius()
+  {
+    return this.#radius;
+  }
+
+  lineColor()
+  {
+    return this.#lineColor;
+  }
+
+  fillColor()
+  {
+    return this.#fillColor;
+  }
+
+  lineWidth()
+  {
+    return this.#lineWidth;
+  }
+
+  xPos()
+  {
+    return this.#xPos;
+  }
+
+  yPos()
+  {
+    return this.#yPos;
+  }
 }
 
 class Metronom
@@ -86,6 +146,7 @@ class Metronom
   #beat;
   #ticksPerBeat;
   #circles;
+  #drawn = false;
   constructor(tempo, beat, ticksPerBeat)
   {
     this.#tempo = tempo;
@@ -94,9 +155,7 @@ class Metronom
 
     this.#circles = new Array();
 
-    let mainCircle = this.#createCenteredCircle();
-
-    this.#addCircle(mainCircle);
+    this.#makeCircles();
   }
 
   #addCircle(circle)
@@ -104,15 +163,74 @@ class Metronom
     this.#circles.push(circle)
   }
 
+  #clearCircles()
+  {
+    this.#circles.length = 0;
+    this.#drawn = false;
+  }
+
   drawAllCircles()
   {
+    if (this.#drawn == true){
+      return;
+    }
     for(let i = 0; i < this.#circles.length; i++)
     {
       this.#circles[i].Draw();
     }
+    this.#drawn = true;
   }
 
-  #createCenteredCircle()
+  redrawAllCircles()
+  {
+    if (this.#drawn == false)
+      return;
+    this.#clearCircles()
+
+    this.#makeCircles();
+
+    this.drawAllCircles();
+  }
+
+  #makeCircles()
+  {
+    let mainCircle = this.#createMainCircle();
+
+    this.#addCircle(mainCircle);
+
+    this.#createBeats(mainCircle);
+
+  }
+
+  #createBeats(mainCircle)
+  {
+    let lineColor = mainCircle.lineColor();
+    let fillColor = mainCircle.fillColor();
+    let lineWidth = mainCircle.lineWidth();
+    let mainRadius = mainCircle.radius();
+
+    let divider = 10;
+    if (this.#beat >= 30)
+      divider = divider + Math.floor((this.#beat - 30) / 5) * 2.5;
+
+    let radius = mainRadius / divider;
+    let xCenter = mainCircle.xPos();
+    let yCenter = mainCircle.yPos();
+
+    let multiplier = 360 / this.#beat;
+
+    for (let i = 0; i < this.#beat; i++)
+    {
+      let initial_arc = ((i * multiplier) - 90) * (Math.PI/180); // Вычитаем 90, чтобы начало было в Pi/2, переводим в радианы
+      let xPos = xCenter + mainRadius * Math.cos(initial_arc);
+      let yPos = yCenter + mainRadius * Math.sin(initial_arc);
+
+      let temp = new Circle(xPos, yPos, lineWidth, radius, lineColor, fillColor);
+      this.#addCircle(temp)
+    }
+  }
+
+  #createMainCircle()
   {
     const [width, height] = canvas_reference.get_size();
     let xCenter = width / 2;
@@ -125,7 +243,7 @@ class Metronom
       smallSide = xCenter;
     }
 
-    let radius = smallSide - lineWidth;
+    let radius = (smallSide - lineWidth) * 0.9;
     let lineColor = "MediumSlateBlue";
     let fillColor = "DarkBlue";
 
@@ -140,13 +258,9 @@ canvas_reference = new CanvasRef(canvas);
 
 button = document.getElementById("myButton");
 
-const metronom = new Metronom(120, 4, 1);
+const metronom = new Metronom(90, 5, 1);
+metronom.drawAllCircles();
 
-function drawCircles()
-{
-  metronom.drawAllCircles();
-}
+button.addEventListener("click", function(event) {metronom.drawAllCircles();});
 
-button.addEventListener("click", drawCircles);
-
-//window.addEventListener("resize", drawCircles);
+window.addEventListener("resize", function(event) {metronom.redrawAllCircles();});
