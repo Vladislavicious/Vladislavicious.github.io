@@ -1,3 +1,6 @@
+const canvas = document.getElementById("myCanvas");
+const context = canvas.getContext('2d');
+
 function drawArc(xPos, yPos, radius, startAngle, endAngle, lineWidth, anticlockwise, lineColor, fillColor)
 {
   startAngle = startAngle * (Math.PI/180);
@@ -84,29 +87,39 @@ class Circle
     this.#drawn = false;
   }
 
-  #Redraw(xPos = null, yPos = null, lineWidth = null, radius = null, lineColor = null, fillColor = null)
+  Redraw(fillColor, xPos = null, yPos = null, lineWidth = null, radius = null, lineColor = null)
   {
+    let changed = false;
     if (xPos != null){
       this.#xPos = xPos;
+      changed = true;
     }
     if (yPos != null){
       this.#yPos = yPos;
+      changed = true;
     }
     if (lineWidth != null){
       this.#lineWidth = lineWidth;
+      changed = true;
     }
     if (radius != null){
       this.#radius = radius;
+      changed = true;
     }
     if (lineColor != null){
       this.#lineColor = lineColor;
+      changed = true;
     }
     if (fillColor != null){
       this.#fillColor = fillColor;
+      changed = true;
     }
 
-    this.Clear();
-    this.Draw();
+    if (changed == true)
+    {
+      this.Clear();
+      this.Draw();
+    }
   }
 
   radius()
@@ -140,11 +153,57 @@ class Circle
   }
 }
 
+class loopedArray
+{
+  #array = new Array();
+  #index = 0;
+  #length = 0;
+
+  addElement(element)
+  {
+    this.#array.push(element);
+    this.#length = this.#array.length;
+  }
+
+  clearArray()
+  {
+    this.#array.length = 0;
+    this.#index = 0;
+    this.length = 0;
+  }
+
+  next()
+  {
+    this.#index += 1;
+    if (this.#index >= this.#length)
+    {
+      this.#index = 0;
+    }
+    return this.#array[this.#index];
+  }
+
+  current()
+  {
+    return this.#array[this.#index];
+  }
+
+  getLength()
+  {
+    return this.#length;
+  }
+
+  onIndex(index)
+  {
+    return this.#array[index];
+  }
+}
+
 class Metronom
 {
   #tempo;
   #beat;
   #ticksPerBeat;
+  #mainCircle;
   #circles;
   #drawn = false;
   constructor(tempo, beat, ticksPerBeat)
@@ -153,19 +212,20 @@ class Metronom
     this.#beat = beat;
     this.#ticksPerBeat = ticksPerBeat;
 
-    this.#circles = new Array();
+    this.#circles = new loopedArray();
 
     this.#makeCircles();
   }
 
   #addCircle(circle)
   {
-    this.#circles.push(circle)
+    this.#circles.addElement(circle);
   }
 
   #clearCircles()
   {
-    this.#circles.length = 0;
+    this.#mainCircle = null;
+    this.#circles.clearArray();
     this.#drawn = false;
   }
 
@@ -174,9 +234,10 @@ class Metronom
     if (this.#drawn == true){
       return;
     }
-    for(let i = 0; i < this.#circles.length; i++)
+    this.#mainCircle.Draw();
+    for(let i = 0; i < this.#circles.getLength(); i++)
     {
-      this.#circles[i].Draw();
+      this.#circles.onIndex(i).Draw();
     }
     this.#drawn = true;
   }
@@ -185,37 +246,41 @@ class Metronom
   {
     if (this.#drawn == false)
       return;
-    this.#clearCircles()
+    this.#clearCircles();
 
     this.#makeCircles();
 
     this.drawAllCircles();
   }
 
+  highLightNext()
+  {
+    this.#circles.current().Redraw("DarkBlue");
+    this.#circles.next().Redraw("MediumSlateBlue");
+  }
+
   #makeCircles()
   {
-    let mainCircle = this.#createMainCircle();
-
-    this.#addCircle(mainCircle);
-
-    this.#createBeats(mainCircle);
+    this.#mainCircle = this.#createMainCircle();
+    this.#mainCircle.Draw();
+    this.#createBeats();
 
   }
 
-  #createBeats(mainCircle)
+  #createBeats()
   {
-    let lineColor = mainCircle.lineColor();
-    let fillColor = mainCircle.fillColor();
-    let lineWidth = mainCircle.lineWidth();
-    let mainRadius = mainCircle.radius();
+    let lineColor = this.#mainCircle.lineColor();
+    let fillColor = this.#mainCircle.fillColor();
+    let lineWidth = this.#mainCircle.lineWidth();
+    let mainRadius = this.#mainCircle.radius();
 
     let divider = 10;
     if (this.#beat >= 30)
       divider = divider + Math.floor((this.#beat - 30) / 5) * 2.5;
 
     let radius = mainRadius / divider;
-    let xCenter = mainCircle.xPos();
-    let yCenter = mainCircle.yPos();
+    let xCenter = this.#mainCircle.xPos();
+    let yCenter = this.#mainCircle.yPos();
 
     let multiplier = 360 / this.#beat;
 
@@ -251,8 +316,6 @@ class Metronom
   }
 }
 
-const canvas = document.getElementById("myCanvas");
-const context = canvas.getContext('2d');
 
 canvas_reference = new CanvasRef(canvas);
 
@@ -261,6 +324,9 @@ button = document.getElementById("myButton");
 const metronom = new Metronom(90, 5, 1);
 metronom.drawAllCircles();
 
+
+
 button.addEventListener("click", function(event) {metronom.drawAllCircles();});
+button.addEventListener("click", function(event) {metronom.highLightNext();});
 
 window.addEventListener("resize", function(event) {metronom.redrawAllCircles();});
