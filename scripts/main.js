@@ -151,18 +151,17 @@ class AudioPlayer
   //volume of the tone. Default is 1, off is 0.
   //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
   //callback to use on end of tone
-  beep(duration, frequency, volume, type, callback)
+  beep(duration = 10, frequency = 500, volume = 2, type = "sawtooth")
   {
     this.#oscillator = this.#audioContext.createOscillator();
     this.#oscillator.connect(this.#gainNode);
 
-    if (volume) {this.#gainNode.gain.value = volume;}
-    if (frequency) {this.#oscillator.frequency.value = frequency;}
-    if (type) {this.#oscillator.type = type;}
-    if (callback) {this.#oscillator.onended = callback;}
+    this.#gainNode.gain.value = volume;
+    this.#oscillator.frequency.value = frequency;
+    this.#oscillator.type = type;
 
     this.#oscillator.start(this.#audioContext.currentTime);
-    this.#oscillator.stop(this.#audioContext.currentTime + ((duration || 75) / 1000));
+    this.#oscillator.stop(this.#audioContext.currentTime + (duration / 1000));
   }
 }
 
@@ -518,6 +517,14 @@ class Metronom
 
     const beat = this.#beats.next();
     this.#clickBeat(beat);
+
+    let clickTime = 60000 / this.#tempo;
+
+    for (let i = 1; i < this.#ticksPerBeat; i++)
+    {
+      const ref = this;
+      setTimeout(function() { ref.tickBeat(); }, clickTime / this.#ticksPerBeat * i);
+    }
   }
 
   #clickBeat(beat)
@@ -529,9 +536,15 @@ class Metronom
       let type = sound["type"];
       let player = new AudioPlayer();
 
-      let duration = 100;
+      let duration = 10;
       player.beep(duration, frequency, 2, type);
     }
+  }
+
+  tickBeat()
+  {
+    let player = new AudioPlayer();
+    player.beep();
   }
 
   checkForIntersections(xPos, yPos)
@@ -641,48 +654,6 @@ class Metronom
   ticks() { return this.#ticksPerBeat; }
   active() { return this.#active; }
 }
-/*
-
-function createMetronom(prevMetr = null)
-{
-  let tempo = tempoInput.value;
-  let beats = beatsInput.value;
-  let ticks = ticksInput.value;
-
-  if (prevMetr == null)
-  {
-    let newMetronom = new Metronom(tempo, beats, ticks);
-    return newMetronom;
-  }
-
-  if (prevMetr.tempo() == tempo && prevMetr.beat() == beats && prevMetr.ticks() == ticks)
-  {
-    return null;
-  }
-  else
-  {
-    let newMetronom = new Metronom(tempo, beats, ticks);
-    return newMetronom;
-  }
-}
-
-function startMetronom()
-{
-
-  let result = createMetronom(metronom);
-
-  if ( result == null )
-  {
-    metronom.start();
-  }
-  else
-  {
-    metronom.start();
-    metronom.clear();
-    metronom = null;
-  }
-}
-*/
 
 function createMetronom()
 {
@@ -715,14 +686,12 @@ function PlayButtonPress()
   else if (statsChanged(metronom) == true)
   {
     metronom.selfDestroy();
-    // очищаем canvas
     canvas_reference.clear();
     metronom = createMetronom();
     metronom.drawAll();
   }
   metronom.start();
 }
-
 
 startButton = document.getElementById("startButton");
 startButton.addEventListener("click", PlayButtonPress);
