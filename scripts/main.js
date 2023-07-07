@@ -15,6 +15,43 @@ function drawArc(xPos, yPos, radius, startAngle, endAngle, lineWidth, anticlockw
   context.stroke();
 }
 
+class SoundStruct
+{
+  frequency;
+  type;
+
+  constructor(frequency, type)
+  {
+    this.frequency = frequency;
+    this.type = type;
+  }
+
+  static getStandartSound()
+  {
+    return new SoundStruct(500, "sine");
+  }
+
+  static getAccentedSound()
+  {
+    return new SoundStruct(800, "sine");
+  }
+
+  static getAlternateSound()
+  {
+    return new SoundStruct(500, "square");
+  }
+
+  static getAlternateAccentedSound()
+  {
+    return new SoundStruct(800, "square");
+  }
+
+  static getTickSound()
+  {
+    return new SoundStruct(500, "sawtooth");
+  }
+}
+
 class Theme
 {
   fillColor = "DarkBlue";
@@ -24,11 +61,11 @@ class Theme
   alternateColor = "Moccasin";
   alternateHighlightedColor = "Gold";
 
-  standartSound = undefined;
-  accentedSound = undefined;
-  alternateSound = undefined;
-  alternatedAccentedSound = undefined;
-  tickSound = undefined;
+  standartSound = SoundStruct.getStandartSound();
+  accentedSound = SoundStruct.getAccentedSound();
+  alternateSound = SoundStruct.getAlternateSound();
+  alternatedAccentedSound = SoundStruct.getAlternateAccentedSound();
+  tickSound = SoundStruct.getTickSound();
 
   constructor()
   {
@@ -38,12 +75,6 @@ class Theme
     }
 
     Theme._instance = this;
-  }
-
-  static PlaySound(soundURI)
-  {
-    let snd = new Audio(soundURI);
-    snd.play();
   }
 }
 
@@ -83,6 +114,48 @@ class CanvasRef
         x: (event.clientX - rect.left) / (rect.right - rect.left) * this.#canvas_ref.width,
         y: (event.clientY - rect.top) / (rect.bottom - rect.top) * this.#canvas_ref.height
     };
+  }
+}
+
+class AudioPlayer
+{
+  #audioContext;
+  #oscillator;
+  #gainNode;
+  constructor()
+  {
+    if (AudioPlayer._instance)
+    {
+      return AudioPlayer._instance;
+    }
+
+    AudioPlayer._instance = this;
+    this.#audioContext = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
+    this.#oscillator = this.#audioContext.createOscillator();
+    this.#gainNode = this.#audioContext.createGain();
+
+    this.#oscillator.connect(this.#gainNode);
+    this.#gainNode.connect(this.#audioContext.destination);
+  }
+
+  //All arguments are optional:
+  //duration of the tone in milliseconds. Default is 500
+  //frequency of the tone in hertz. default is 440
+  //volume of the tone. Default is 1, off is 0.
+  //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
+  //callback to use on end of tone
+  beep(duration, frequency, volume, type, callback)
+  {
+    this.#oscillator = this.#audioContext.createOscillator();
+    this.#oscillator.connect(this.#gainNode);
+
+    if (volume) {this.#gainNode.gain.value = volume;}
+    if (frequency) {this.#oscillator.frequency.value = frequency;}
+    if (type) {this.#oscillator.type = type;}
+    if (callback) {this.#oscillator.onended = callback;}
+
+    this.#oscillator.start(this.#audioContext.currentTime);
+    this.#oscillator.stop(this.#audioContext.currentTime + ((duration || 75) / 1000));
   }
 }
 
@@ -253,7 +326,7 @@ class AlternateBeatState extends BeatState
     let theme = new Theme();
     this.baseColor = theme.alternateColor;
     this.highlightedColor = theme.alternateHighlightedColor;
-    this.baseSound = theme. alternateSound;
+    this.baseSound = theme.alternateSound;
   }
   changeBeatState()
   {
@@ -284,7 +357,7 @@ class Beat extends Circle
     this.#beatState = this.#beatState.changeBeatState();
     let newBaseColor = this.#beatState.baseColor;
 
-    this.Redraw(newBaseColor, undefined, undefined, undefined, undefined, newBaseColor);
+    this.Redraw(newBaseColor, newBaseColor);
   }
 
   Redraw(newFillColor, newLineColor)
@@ -429,8 +502,13 @@ class Metronom
     const beat = this.#beats.next();
     if (beat.highlight())
     {
-      let soundURI = beat.baseSound;
-      Theme.PlaySound(soundURI);
+      let sound = beat.getBeatState().baseSound;
+      let frequency = sound["frequency"];
+      let type = sound["type"];
+      let player = new AudioPlayer();
+
+      let duration = 100;
+      player.beep(duration, frequency, 2, type);
     }
   }
 
@@ -527,7 +605,7 @@ canvas_reference = new CanvasRef(canvas);
 theme = new Theme();
 
 
-const metronom = new Metronom(300, 4, 1);
+const metronom = new Metronom(180, 8, 1);
 metronom.drawAll();
 
 canvas.addEventListener("mousedown", function(event)
@@ -545,21 +623,3 @@ startButton = document.getElementById("startButton");
 startButton.addEventListener("click", function(event) {metronom.start();});
 
 window.addEventListener("resize", function(event) {metronom.redrawAllCircles();});
-
-var audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
-
-function beep(duration, frequency, volume, type, callback) {
-  var oscillator = audioCtx.createOscillator();
-  var gainNode = audioCtx.createGain();
-
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-
-  if (volume){gainNode.gain.value = volume;}
-  if (frequency){oscillator.frequency.value = frequency;}
-  if (type){oscillator.type = type;}
-  if (callback){oscillator.onended = callback;}
-
-  oscillator.start(audioCtx.currentTime);
-  oscillator.stop(audioCtx.currentTime + ((duration || 500) / 1000));
-};
