@@ -21,8 +21,14 @@ class Theme
   lineColor = "MediumSlateBlue";
   baseColor = "MediumSlateBlue";
   baseHighlightedColor = "LightSeaGreen";
-  alternateColor = "DarkTurquoise";
-  alternateHighlightedColor = "DeepSkyBlue";
+  alternateColor = "Moccasin";
+  alternateHighlightedColor = "Gold";
+
+  standartSound = undefined;
+  accentedSound = undefined;
+  alternateSound = undefined;
+  alternatedAccentedSound = undefined;
+  tickSound = undefined;
 
   constructor()
   {
@@ -32,6 +38,12 @@ class Theme
     }
 
     Theme._instance = this;
+  }
+
+  static PlaySound(soundURI)
+  {
+    let snd = new Audio(soundURI);
+    snd.play();
   }
 }
 
@@ -191,63 +203,120 @@ class Circle
   }
 }
 
+class BeatState
+{
+  baseColor;
+  highlightedColor;
+  baseSound;
+  highlighted = false;
+
+  changeBeatState() {}
+  highlight()
+  {
+    if ( this.highlighted == true )
+      return false;
+
+      this.highlighted = true;
+      return true;
+  }
+  makeNormal()
+  {
+    if ( this.highlighted == false )
+      return false;
+
+      this.highlighted = false;
+      return true;
+  }
+}
+
+class BaseBeatState extends BeatState
+{
+  constructor()
+  {
+    super();
+    let theme = new Theme();
+    this.baseColor = theme.baseColor;
+    this.highlightedColor = theme.baseHighlightedColor;
+    this.baseSound = theme.standartSound;
+  }
+  changeBeatState()
+  {
+    return new AlternateBeatState();
+  }
+}
+
+class AlternateBeatState extends BeatState
+{
+  constructor()
+  {
+    super();
+    let theme = new Theme();
+    this.baseColor = theme.alternateColor;
+    this.highlightedColor = theme.alternateHighlightedColor;
+    this.baseSound = theme. alternateSound;
+  }
+  changeBeatState()
+  {
+    return new BaseBeatState();
+  }
+}
+
 class Beat extends Circle
 {
-  #baseColor;
-  #highlightedColor;
-  #alternated = false;
-  #highlighted = false;
+  #beatState;
 
-  constructor(xPos, yPos, lineWidth, radius)
+
+  constructor(xPos, yPos, lineWidth, radius, beatState)
   {
-    const theme = new Theme();
-    let lineColor = theme.baseColor;
-    let fillColor = theme.baseColor;
+    let lineColor = beatState.baseColor;
+    let fillColor = beatState.baseColor;
     super(xPos, yPos, lineWidth, radius, lineColor, fillColor);
-    this.#baseColor = theme.baseColor;
-    this.#highlightedColor = theme.baseHighlightedColor;
+    this.#beatState = beatState;
+  }
+
+  getBeatState()
+  {
+    return this.#beatState;
   }
 
   changeColorPalette()
   {
-    const theme = new Theme();
-    let newBaseColor;
-    let newHighlightedColor;
-    if (this.#alternated == true)
-    {
-      newBaseColor = theme.baseColor;
-      newHighlightedColor = theme.baseHighlightedColor;
-      this.#alternated = false;
-    }
-    else
-    {
-      newBaseColor = theme.alternateColor;
-      newHighlightedColor = theme.alternateHighlightedColor;
-      this.#alternated = true;
-    }
+    this.#beatState = this.#beatState.changeBeatState();
+    let newBaseColor = this.#beatState.baseColor;
 
     this.Redraw(newBaseColor, undefined, undefined, undefined, undefined, newBaseColor);
-    this.#baseColor = newBaseColor;
-    this.#highlightedColor = newHighlightedColor;
-
   }
 
-  Highlight()
+  Redraw(newFillColor, newLineColor)
   {
-    if (this.#highlighted == true)
-      return;
+    super.Redraw(newFillColor, undefined, undefined, undefined, undefined, newLineColor);
+  }
 
-    this.Redraw(this.#highlightedColor, undefined, undefined, undefined, undefined, this.#highlightedColor);
-    this.#highlighted = true;
+  makeSound() { return false; }
+
+  highlight()  // Возвращает True, если эта доля издаёт звук
+  {
+    if (this.#beatState.highlight() == false)
+      return false;
+
+    this.Redraw(this.#beatState.highlightedColor, this.#beatState.highlightedColor);
+    return this.makeSound();
   }
 
   makeNormal()
   {
-    if (this.#highlighted == false)
+    if (this.#beatState.makeNormal() == false)
       return;
 
-    this.Redraw(this.#baseColor, undefined, undefined, undefined, undefined, this.#baseColor);
-    this.#highlighted = false;
+    this.Redraw(this.#beatState.baseColor, this.#beatState.baseColor);
+  }
+}
+
+class SoundedBeat extends Beat
+{
+  makeSound()
+  {
+    return true;
   }
 }
 
@@ -302,7 +371,7 @@ class Metronom
   #beat;
   #ticksPerBeat;
   #mainCircle;
-  #circles;
+  #beats;
   #drawn = false;
   #active = false;
   #timer;
@@ -312,32 +381,32 @@ class Metronom
     this.#beat = beat;
     this.#ticksPerBeat = ticksPerBeat;
 
-    this.#circles = new loopedArray();
+    this.#beats = new loopedArray();
 
-    this.#makeCircles();
+    this.#createCircles();
   }
 
-  #addCircle(circle)
+  #addBeat(beat)
   {
-    this.#circles.addElement(circle);
+    this.#beats.addElement(beat);
   }
 
-  #clearCircles()
+  #clear()
   {
     this.#mainCircle = null;
-    this.#circles.clearArray();
+    this.#beats.clearArray();
     this.#drawn = false;
   }
 
-  drawAllCircles()
+  drawAll()
   {
     if (this.#drawn == true){
       return;
     }
     this.#mainCircle.Draw();
-    for(let i = 0; i < this.#circles.getLength(); i++)
+    for(let i = 0; i < this.#beats.getLength(); i++)
     {
-      this.#circles.onIndex(i).Draw();
+      this.#beats.onIndex(i).Draw();
     }
     this.#drawn = true;
   }
@@ -346,26 +415,32 @@ class Metronom
   {
     if (this.#drawn == false)
       return;
-    this.#clearCircles();
+    this.#clear();
 
-    this.#makeCircles();
+    this.#createCircles();
 
-    this.drawAllCircles();
+    this.drawAll();
   }
 
   highLightNext()
   {
-    this.#circles.current().makeNormal();
-    this.#circles.next().Highlight();
+    this.#beats.current().makeNormal();
+
+    const beat = this.#beats.next();
+    if (beat.highlight())
+    {
+      let soundURI = beat.baseSound;
+      Theme.PlaySound(soundURI);
+    }
   }
 
   checkForIntersections(xPos, yPos)
   {
-    for(let i = 0; i < this.#circles.getLength(); i++)
+    for(let i = 0; i < this.#beats.getLength(); i++)
     {
-      if ( this.#circles.onIndex(i).intersects(xPos, yPos) == true )
+      if ( this.#beats.onIndex(i).intersects(xPos, yPos) == true )
       {
-        this.#circles.onIndex(i).changeColorPalette();
+        this.#beats.onIndex(i).changeColorPalette();
         break;
       }
     }
@@ -387,7 +462,7 @@ class Metronom
     }
   }
 
-  #makeCircles()
+  #createCircles()
   {
     this.#mainCircle = this.#createMainCircle();
     this.#mainCircle.Draw();
@@ -415,8 +490,8 @@ class Metronom
       let xPos = xCenter + mainRadius * Math.cos(initial_arc);
       let yPos = yCenter + mainRadius * Math.sin(initial_arc);
 
-      let temp = new Beat(xPos, yPos, lineWidth, radius);
-      this.#addCircle(temp)
+      let temp = new SoundedBeat(xPos, yPos, lineWidth, radius, new BaseBeatState());
+      this.#addBeat(temp)
     }
   }
 
@@ -452,8 +527,8 @@ canvas_reference = new CanvasRef(canvas);
 theme = new Theme();
 
 
-const metronom = new Metronom(300, 55, 1);
-metronom.drawAllCircles();
+const metronom = new Metronom(300, 4, 1);
+metronom.drawAll();
 
 canvas.addEventListener("mousedown", function(event)
 {
@@ -463,10 +538,28 @@ canvas.addEventListener("mousedown", function(event)
 
 
 button = document.getElementById("myButton");
-button.addEventListener("click", function(event) {metronom.drawAllCircles();});
+button.addEventListener("click", function(event) {metronom.drawAll();});
 button.addEventListener("click", function(event) {metronom.highLightNext();});
 
 startButton = document.getElementById("startButton");
 startButton.addEventListener("click", function(event) {metronom.start();});
 
 window.addEventListener("resize", function(event) {metronom.redrawAllCircles();});
+
+var audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
+
+function beep(duration, frequency, volume, type, callback) {
+  var oscillator = audioCtx.createOscillator();
+  var gainNode = audioCtx.createGain();
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  if (volume){gainNode.gain.value = volume;}
+  if (frequency){oscillator.frequency.value = frequency;}
+  if (type){oscillator.type = type;}
+  if (callback){oscillator.onended = callback;}
+
+  oscillator.start(audioCtx.currentTime);
+  oscillator.stop(audioCtx.currentTime + ((duration || 500) / 1000));
+};
