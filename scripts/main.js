@@ -122,6 +122,8 @@ class CanvasRef
   {
     this.#context_ref.clearRect(0, 0, this.#canvas_ref.width, this.#canvas_ref.height);
   }
+
+  getContext() { return this.#context_ref; }
 }
 
 class AudioPlayer
@@ -493,11 +495,45 @@ class Metronom
       return;
     }
     this.#mainCircle.Draw();
+    this.#drawCurves();
     for(let i = 0; i < this.#beats.getLength(); i++)
     {
       this.#beats.onIndex(i).Draw();
     }
     this.#drawn = true;
+  }
+
+  #drawCurves()
+  {
+    let controlX = this.#mainCircle.xPos();
+    let controlY = this.#mainCircle.yPos();
+
+    let startX = controlX;
+    let startY = controlY - this.#mainCircle.radius();
+
+    const canvas_ref = new CanvasRef();
+    const context_ref = canvas_ref.getContext();
+    const theme = new Theme();
+
+    context_ref.beginPath();
+    context_ref.moveTo(startX, startY);
+    context_ref.lineWidth = 2;
+    context_ref.strokeStyle = theme.lineColor;
+    context_ref.fillStyle = theme.fillColor;
+
+    for(let i = 1; i < this.#beats.getLength(); i++)
+    {
+      let endX = this.#beats.onIndex(i).xPos();
+      let endY = this.#beats.onIndex(i).yPos();
+      context_ref.quadraticCurveTo(controlX, controlY, endX, endY);
+    }
+    if (this.#beats.getLength() >= 2)
+    {
+      context_ref.quadraticCurveTo(controlX, controlY, startX, startY);
+      context_ref.closePath();
+      context_ref.fill();
+      context_ref.stroke();
+    }
   }
 
   redrawAllCircles()
@@ -609,7 +645,7 @@ class Metronom
     let lineWidth = this.#mainCircle.lineWidth();
     let mainRadius = this.#mainCircle.radius();
 
-    let divider = 10;
+    let divider = 18;
     if (this.#beat >= 30)
       divider = divider + Math.floor((this.#beat - 30) / 5) * 2.5;
 
@@ -643,7 +679,7 @@ class Metronom
       smallSide = xCenter;
     }
 
-    let radius = (smallSide - lineWidth) * 0.9;
+    let radius = (smallSide - lineWidth) * 0.95;
     let lineColor = theme.lineColor;
     let fillColor = theme.fillColor;
 
