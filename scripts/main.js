@@ -1,3 +1,4 @@
+"use strict";
 const canvas = document.getElementById("myCanvas");
 const context = canvas.getContext('2d');
 
@@ -60,6 +61,7 @@ class Theme
   baseHighlightedColor = "LightSeaGreen";
   alternateColor = "Moccasin";
   alternateHighlightedColor = "Gold";
+  mutedColor = "DimGray";
 
   standartSound = SoundStruct.getStandartSound();
   accentedSound = SoundStruct.getAccentedSound();
@@ -123,7 +125,7 @@ class CanvasRef
     this.#context_ref.clearRect(0, 0, this.#canvas_ref.width, this.#canvas_ref.height);
   }
 
-  getContext() { return this.#context_ref; }
+  get context() { return this.#context_ref; }
 }
 
 class AudioPlayer
@@ -189,14 +191,14 @@ class Circle
     this.#drawn = false;
   }
 
-  isDrawn()
+  get drawn()
   {
     return this.#drawn;
   }
 
   Draw()
   {
-    if (!this.isDrawn())
+    if (!this.drawn)
     {
       drawArc(this.#xPos, this.#yPos, this.#radius, 0, 360, this.#lineWidth, false, this.#lineColor, this.#fillColor);
       this.#drawn = true;
@@ -253,35 +255,17 @@ class Circle
     return false;
   }
 
-  radius()
-  {
-    return this.#radius;
-  }
+  get radius() { return this.#radius; }
 
-  lineColor()
-  {
-    return this.#lineColor;
-  }
+  get lineColor() { return this.#lineColor; }
 
-  fillColor()
-  {
-    return this.#fillColor;
-  }
+  get fillColor() { return this.#fillColor; }
 
-  lineWidth()
-  {
-    return this.#lineWidth;
-  }
+  get lineWidth() { return this.#lineWidth; }
 
-  xPos()
-  {
-    return this.#xPos;
-  }
+  get xPos() { return this.#xPos; }
 
-  yPos()
-  {
-    return this.#yPos;
-  }
+  get yPos() { return this.#yPos; }
 }
 
 class BeatState
@@ -290,6 +274,7 @@ class BeatState
   highlightedColor;
   baseSound;
   highlighted = false;
+  makesSound = false;
 
   changeBeatState() {}
   highlight()
@@ -319,6 +304,7 @@ class BaseBeatState extends BeatState
     this.baseColor = theme.baseColor;
     this.highlightedColor = theme.baseHighlightedColor;
     this.baseSound = theme.standartSound;
+    this.makesSound = true;
   }
   changeBeatState()
   {
@@ -335,6 +321,22 @@ class AlternateBeatState extends BeatState
     this.baseColor = theme.alternateColor;
     this.highlightedColor = theme.alternateHighlightedColor;
     this.baseSound = theme.alternateSound;
+    this.makesSound = true;
+  }
+  changeBeatState()
+  {
+    return new MutedBeatState();
+  }
+}
+
+class MutedBeatState extends BeatState
+{
+  constructor()
+  {
+    super();
+    let theme = new Theme();
+    this.baseColor = theme.mutedColor;
+    this.highlightedColor = theme.mutedColor;
   }
   changeBeatState()
   {
@@ -346,24 +348,25 @@ class Beat extends Circle
 {
   #beatState;
 
-
   constructor(xPos, yPos, lineWidth, radius, beatState)
   {
     let lineColor = beatState.baseColor;
     let fillColor = beatState.baseColor;
     super(xPos, yPos, lineWidth, radius, lineColor, fillColor);
-    this.#beatState = beatState;
+    this.beatState = beatState;
   }
 
-  getBeatState()
+  get beatState() { return this.#beatState; }
+  set beatState(state)
   {
-    return this.#beatState;
+    if (state instanceof BeatState)
+      this.#beatState = state;
   }
 
   changeColorPalette()
   {
-    this.#beatState = this.#beatState.changeBeatState();
-    let newBaseColor = this.#beatState.baseColor;
+    this.beatState = this.beatState.changeBeatState();
+    let newBaseColor = this.beatState.baseColor;
 
     this.Redraw(newBaseColor, newBaseColor);
   }
@@ -373,39 +376,57 @@ class Beat extends Circle
     super.Redraw(newFillColor, undefined, undefined, undefined, undefined, newLineColor);
   }
 
-  makeSound() { return false; }
+  doesMakeSound() { return false; }
 
   highlight()  // Возвращает True, если эта доля издаёт звук
   {
-    if (this.#beatState.highlight() == false)
+    if (this.beatState.highlight() == false)
       return false;
 
-    this.Redraw(this.#beatState.highlightedColor, this.#beatState.highlightedColor);
-    return this.makeSound();
+    this.Redraw(this.beatState.highlightedColor, this.beatState.highlightedColor);
+    return this.doesMakeSound();
   }
 
   makeNormal()
   {
-    if (this.#beatState.makeNormal() == false)
+    if (this.beatState.makeNormal() == false)
       return;
 
-    this.Redraw(this.#beatState.baseColor, this.#beatState.baseColor);
+    this.Redraw(this.beatState.baseColor, this.beatState.baseColor);
   }
 }
 
 class SoundedBeat extends Beat
 {
-  makeSound()
+  doesMakeSound()
   {
-    return true;
+    return this.beatState.makesSound;
   }
 }
 
 class loopedArray
 {
   #array = new Array();
-  #index = 0;
+  #ind = 0;
   #length = 0;
+
+  get length()
+  {
+    return this.#length;
+  }
+  get #index() { return this.#ind; }
+  set #index(value)
+  {
+    if (value < 0)
+    {
+      console.log("отрицательный индекс");
+      return;
+    }
+    let newIndex = value;
+    if (value >= this.length)
+      newIndex = 0;
+    this.#ind = newIndex;
+  }
 
   addElement(element)
   {
@@ -416,17 +437,18 @@ class loopedArray
   clearArray()
   {
     this.#array.length = 0;
-    this.#index = 0;
-    this.length = 0;
+    this.#ind = 0;
+    this.#length = 0;
+  }
+
+  getArray()
+  {
+    return this.#array;
   }
 
   next()
   {
     this.#index += 1;
-    if (this.#index >= this.#length)
-    {
-      this.#index = 0;
-    }
     return this.#array[this.#index];
   }
 
@@ -435,10 +457,6 @@ class loopedArray
     return this.#array[this.#index];
   }
 
-  getLength()
-  {
-    return this.#length;
-  }
 
   onIndex(index)
   {
@@ -452,7 +470,7 @@ class loopedArray
 
   reset()
   {
-    this.#index = 0;
+    this.#ind = 0;
   }
 }
 
@@ -495,24 +513,33 @@ class Metronom
       return;
     }
     this.#mainCircle.Draw();
-    this.#drawCurves();
-    for(let i = 0; i < this.#beats.getLength(); i++)
+    this.drawCurves();
+    for(let i = 0; i < this.#beats.length; i++)
     {
       this.#beats.onIndex(i).Draw();
     }
     this.#drawn = true;
   }
 
-  #drawCurves()
+  drawCurves()
   {
-    let controlX = this.#mainCircle.xPos();
-    let controlY = this.#mainCircle.yPos();
+    if (this.#beat > 12)
+      return;
+
+    let beatsArray = this.#beats.getArray();
+    this.#drawCurvesBetweenCircles(beatsArray);
+  }
+
+  #drawCurvesBetweenCircles(beatsArray)
+  {
+    let controlX = this.#mainCircle.xPos;
+    let controlY = this.#mainCircle.yPos;
 
     let startX = controlX;
-    let startY = controlY - this.#mainCircle.radius();
+    let startY = controlY - this.#mainCircle.radius;
 
     const canvas_ref = new CanvasRef();
-    const context_ref = canvas_ref.getContext();
+    const context_ref = canvas_ref.context;
     const theme = new Theme();
 
     context_ref.beginPath();
@@ -521,13 +548,13 @@ class Metronom
     context_ref.strokeStyle = theme.lineColor;
     context_ref.fillStyle = theme.fillColor;
 
-    for(let i = 1; i < this.#beats.getLength(); i++)
+    for(let i = 1; i < beatsArray.length; i++)
     {
-      let endX = this.#beats.onIndex(i).xPos();
-      let endY = this.#beats.onIndex(i).yPos();
+      let endX = beatsArray[i].xPos;
+      let endY = beatsArray[i].yPos;
       context_ref.quadraticCurveTo(controlX, controlY, endX, endY);
     }
-    if (this.#beats.getLength() >= 2)
+    if (beatsArray.length >= 2)
     {
       context_ref.quadraticCurveTo(controlX, controlY, startX, startY);
       context_ref.closePath();
@@ -553,39 +580,31 @@ class Metronom
 
     const beat = this.#beats.next();
     this.#clickBeat(beat);
-
-    let clickTime = 60000 / this.#tempo;
-
-    for (let i = 1; i < this.#ticksPerBeat; i++)
-    {
-      const ref = this;
-      setTimeout(function() { ref.tickBeat(); }, clickTime / this.#ticksPerBeat * i);
-    }
   }
 
   #clickBeat(beat)
   {
     if (beat.highlight())
     {
-      let sound = beat.getBeatState().baseSound;
+      let sound = beat.beatState.baseSound;
       let frequency = sound["frequency"];
       let type = sound["type"];
       let player = new AudioPlayer();
 
       let duration = 10;
       player.beep(duration, frequency, 2, type);
-    }
-  }
 
-  tickBeat()
-  {
-    let player = new AudioPlayer();
-    player.beep();
+      let clickTime = 60000 / this.#tempo;
+      for (let i = 1; i < this.#ticksPerBeat; i++)  //  Полудоли
+      {
+        setTimeout(function() { player.beep(); }, clickTime / this.#ticksPerBeat * i);
+      }
+    }
   }
 
   checkForIntersections(xPos, yPos)
   {
-    for(let i = 0; i < this.#beats.getLength(); i++)
+    for(let i = 0; i < this.#beats.length; i++)
     {
       if ( this.#beats.onIndex(i).intersects(xPos, yPos) == true )
       {
@@ -609,16 +628,13 @@ class Metronom
     this.#beats.reset();
   }
 
-  start()
+  start(temp)
   {
     if (this.#active == false)
     {
-      let time = 60000 / this.#tempo;
-      const ref = this;
+      this.#beats.startFromIndex(this.#beats.length - 1);
 
-      this.#beats.startFromIndex(this.#beats.getLength() - 1);
-
-      this.#timer = setInterval(() => ref.highlightNext(), time);
+      this.tempo = temp;
       this.#active = true;
     }
   }
@@ -628,7 +644,7 @@ class Metronom
     if (this.#active == true)
     {
       this.#reset();
-      clearInterval(this.#timer);
+      this.tempo = 0;
       this.#active = false;
     }
   }
@@ -642,16 +658,16 @@ class Metronom
 
   #createBeats()
   {
-    let lineWidth = this.#mainCircle.lineWidth();
-    let mainRadius = this.#mainCircle.radius();
+    let lineWidth = this.#mainCircle.lineWidth;
+    let mainRadius = this.#mainCircle.radius;
 
     let divider = 18;
     if (this.#beat >= 30)
       divider = divider + Math.floor((this.#beat - 30) / 5) * 2.5;
 
     let radius = mainRadius / divider;
-    let xCenter = this.#mainCircle.xPos();
-    let yCenter = this.#mainCircle.yPos();
+    let xCenter = this.#mainCircle.xPos;
+    let yCenter = this.#mainCircle.yPos;
 
     let multiplier = 360 / this.#beat;
 
@@ -685,10 +701,37 @@ class Metronom
 
     return new Circle(xCenter, yCenter, lineWidth, radius, lineColor, fillColor);
   }
-  tempo() { return this.#tempo; }
-  beat() { return this.#beat; }
-  ticks() { return this.#ticksPerBeat; }
-  active() { return this.#active; }
+  get tempo() { return this.#tempo; }
+  set tempo(value)
+  {
+    if (value < 0)
+    {
+      console.log("отрицательный темп");
+      return;
+    }
+    if ( value == 0 )
+    {
+      clearInterval(this.timer);
+      this.#tempo = 0;
+      return;
+    }
+
+    this.#tempo = value;
+    let time = 60000 / this.#tempo;
+    const ref = this;
+    this.timer = setInterval(() => ref.highlightNext(), time);
+
+  }
+  get beat() { return this.#beat; }
+  get ticks() { return this.#ticksPerBeat; }
+  get active() { return this.#active; }
+  get timer() { return this.#timer; }
+  set timer(value)
+  {
+    if (this.#timer)
+      clearInterval(this.#timer);
+    this.#timer = value;
+  }
 }
 
 function createMetronom()
@@ -707,14 +750,14 @@ function statsChanged(prevMetr)
   let beats = beatsInput.value;
   let ticks = ticksInput.value;
 
-  if (prevMetr.tempo() != tempo || prevMetr.beat() != beats || prevMetr.ticks() != ticks)
+  if (prevMetr.tempo != tempo || prevMetr.beat != beats || prevMetr.ticks != ticks)
     return true;
   return false;
 }
 
 function PlayButtonPress()
 {
-  if ( metronom.active() == true )
+  if ( metronom.active == true )
   {
     metronom.stop();
     return;
@@ -726,19 +769,19 @@ function PlayButtonPress()
     metronom = createMetronom();
     metronom.drawAll();
   }
-  metronom.start();
+  metronom.start(metronom.tempo);
 }
 
-startButton = document.getElementById("startButton");
+const startButton = document.getElementById("startButton");
 startButton.addEventListener("click", PlayButtonPress);
 
-tempoInput = document.getElementById("tempoInput");
-beatsInput = document.getElementById("beatsInput");
-ticksInput = document.getElementById("ticksInput");
+const tempoInput = document.getElementById("tempoInput");
+const beatsInput = document.getElementById("beatsInput");
+const ticksInput = document.getElementById("ticksInput");
 
 
-canvas_reference = new CanvasRef(canvas);
-theme = new Theme();
+let canvas_reference = new CanvasRef(canvas);
+let theme = new Theme();
 
 let metronom = null;
 metronom = createMetronom();
