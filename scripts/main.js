@@ -595,9 +595,9 @@ class Metronom
       player.beep(duration, frequency, 2, type);
 
       let clickTime = 60000 / this.#tempo;
-      for (let i = 1; i < this.#ticksPerBeat; i++)  //  Полудоли
+      for (let i = 1; i < this.ticks; i++)  //  Полудоли
       {
-        setTimeout(function() { player.beep(); }, clickTime / this.#ticksPerBeat * i);
+        setTimeout(function() { player.beep(); }, clickTime / this.ticks * i);
       }
     }
   }
@@ -633,10 +633,9 @@ class Metronom
     if (this.#active == false)
     {
       this.#beats.startFromIndex(this.#beats.length - 1);
-
-      this.tempo = temp;
       this.#active = true;
     }
+    this.tempo = temp;
   }
 
   stop()
@@ -724,6 +723,10 @@ class Metronom
   }
   get beat() { return this.#beat; }
   get ticks() { return this.#ticksPerBeat; }
+  set ticks(value)
+  {
+    this.#ticksPerBeat = value;
+  }
   get active() { return this.#active; }
   get timer() { return this.#timer; }
   set timer(value)
@@ -741,35 +744,42 @@ function createMetronom()
   let ticks = ticksInput.value;
 
   let newMetronom = new Metronom(tempo, beats, ticks);
+  newMetronom.drawAll();
   return newMetronom;
 }
 
 function statsChanged(prevMetr)
 {
-  let tempo = tempoInput.value;
   let beats = beatsInput.value;
-  let ticks = ticksInput.value;
 
-  if (prevMetr.tempo != tempo || prevMetr.beat != beats || prevMetr.ticks != ticks)
+  if (prevMetr.beat != beats)
     return true;
   return false;
 }
-
+function BeatsChanged()
+{
+  metronom.stop();
+  metronom.selfDestroy();
+  canvas_reference.clear();
+  metronom = createMetronom();
+  metronom.drawAll();
+  metronom.ticks = ticksInput.value;
+  metronom.start(tempoInput.value);
+}
 function PlayButtonPress()
 {
-  if ( metronom.active == true )
+  if (statsChanged(metronom) == true)
+  {
+    BeatsChanged();
+    return;
+  }
+  else if ( metronom.active == true )
   {
     metronom.stop();
     return;
   }
-  else if (statsChanged(metronom) == true)
-  {
-    metronom.selfDestroy();
-    canvas_reference.clear();
-    metronom = createMetronom();
-    metronom.drawAll();
-  }
-  metronom.start(metronom.tempo);
+  metronom.ticks = ticksInput.value;
+  metronom.start(tempoInput.value);
 }
 
 const startButton = document.getElementById("startButton");
@@ -785,12 +795,38 @@ let theme = new Theme();
 
 let metronom = null;
 metronom = createMetronom();
-metronom.drawAll();
 
 canvas.addEventListener("mousedown", function(event)
 {
-  coordinates = canvas_reference.getMousePos(event);
+  let coordinates = canvas_reference.getMousePos(event);
   metronom.checkForIntersections(coordinates["x"], coordinates["y"]);
 });
 
 window.addEventListener("resize", function(event) {metronom.redrawAllCircles();});
+
+tempoInput.onchange = function()
+{
+  if (metronom.active)
+  {
+    if ( metronom.tempo != tempoInput.value )
+      metronom.tempo = tempoInput.value;
+  }
+}
+
+beatsInput.onchange = function()
+{
+  if (metronom.active)
+  {
+    if ( metronom.beats != beatsInput.value )
+      BeatsChanged();
+  }
+}
+
+ticksInput.onchange = function()
+{
+  if (metronom.active)
+  {
+    if ( metronom.ticks != ticksInput.value )
+      metronom.ticks = ticksInput.value;
+  }
+}
