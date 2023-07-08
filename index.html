@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My Page</title>
+  <title>Metronom</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
   <div class="rows">
     <div class="rows-item">
-      First Row
+      <a href="petronom.html" class="btn">Переход на петроном</a>
     </div>
     <div class="rows-item" id="canvasRow">
       <canvas id="myCanvas"></canvas>
@@ -77,7 +77,74 @@
   </div>
   <script type="text/javascript" src="scripts/main.js"></script>
   <script>
+    const canvas = document.getElementById("myCanvas");
+    const context = canvas.getContext('2d');
 
+    const tempoInput = document.getElementById("tempoInput");
+    const beatsInput = document.getElementById("beatsInput");
+    const ticksInput = document.getElementById("ticksInput");
+
+
+    let canvas_reference;
+    if (CanvasRef.instance != null)
+    {
+      canvas_reference = new CanvasRef();
+      canvas_reference.canvas = canvas;
+    }
+    else
+      canvas_reference = new CanvasRef(canvas)
+
+    Drawer.initialize();
+    let theme = new Theme();
+
+    let g_metronom;
+    g_metronom = Metronom.createMetronom(tempoInput.value, beatsInput.value, ticksInput.value);
+
+    function getMetronomRef() { return g_metronom; }
+    function setMetronomRef(metronom) { g_metronom = metronom; }
+
+
+    const startButton = document.getElementById("startButton");
+    startButton.addEventListener("click", function()
+    {
+      let newMetronom = Metronom.PlayButtonPress(getMetronomRef(), tempoInput.value, beatsInput.value, ticksInput.value);
+      setMetronomRef(newMetronom);
+    });
+
+    canvas_reference.canvas.addEventListener("mousedown", function(event)
+    {
+      let coordinates = canvas_reference.getMousePos(event);
+      getMetronomRef().checkForIntersections(coordinates["x"], coordinates["y"]);
+    });
+
+    window.addEventListener("resize", function(event) {getMetronomRef().redrawAllCircles();});
+
+    tempoInput.onchange = function()
+    {
+      if (getMetronomRef().active)
+      {
+        if ( getMetronomRef().tempo != tempoInput.value )
+          getMetronomRef().tempo = tempoInput.value;
+      }
+    }
+
+    beatsInput.onchange = function()
+    {
+      if (getMetronomRef().active)
+      {
+        if ( getMetronomRef().beats != beatsInput.value )
+          setMetronomRef(Metronom.BeatsChanged(getMetronomRef(), beatsInput.value));
+      }
+    }
+
+    ticksInput.onchange = function()
+    {
+      if (getMetronomRef().active)
+      {
+        if ( getMetronomRef().ticks != ticksInput.value )
+          getMetronomRef().ticks = ticksInput.value;
+      }
+    }
   </script>
 </body>
 </html>

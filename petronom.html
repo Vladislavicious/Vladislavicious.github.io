@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Petronom</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <div class="rows">
+    <div class="rows-item">
+      <a href="index.html" class="btn">Переход на главную</a>
+    </div>
+    <div class="rows-item" id="canvasRow">
+      <canvas id="myCanvas"></canvas>
+    </div>
+    <div class="rows-item">
+      <details>
+        <summary>
+          <input type="number" id="tempoInput" placeholder="Темп метронома" step="1" value="120" min="1" max="300" required>
+          <script>
+            document.getElementById('tempoInput').onkeypress =
+              function (e) {
+                var ev = e || window.event;
+                if(ev.charCode < 48 || ev.charCode > 57) {
+                  return false; // not a digit
+                } else if(this.value * 10 + ev.charCode - 48 > this.max) {
+                   return false;
+                } else {
+                   return true;
+                }
+              }
+          </script>
+        </summary>
+        Сколько ударов в минуту
+      </details>
+      <button id="startButton" autofocus>Запуск</button>
+      <details>
+        <summary>
+          <input id="firstBeatsInput" placeholder="Доли в такте" step="1" value="3" min="1" max="12" required>
+          <script>
+            document.getElementById("firstBeatsInput").onkeypress =
+              function (e)
+                {
+                  var ev = e || window.event;
+                  if(ev.charCode < 48 || ev.charCode > 57) { return false; }// not a digit
+                  else
+                  {
+                    let val = this.value * 10 + ev.charCode - 48;
+                    let otherVal = document.getElementById("secondBeatsInput").value;
+                    if ( val > this.max || val == otherVal ) { return false; }
+                    else { return true; }
+                  }
+                }
+          </script>
+        </summary>
+        Сколько долей в первом ритме
+      </details>
+      <details>
+        <summary>
+          <input id="secondBeatsInput" placeholder="Доли в такте" step="1" value="4" min="1" max="12" required>
+          <script>
+            document.getElementById("secondBeatsInput").onkeypress =
+            function (e)
+                {
+                  var ev = e || window.event;
+                  if(ev.charCode < 48 || ev.charCode > 57) { return false; }// not a digit
+                  else
+                  {
+                    let val = this.value * 10 + ev.charCode - 48;
+                    let otherVal = document.getElementById("firstBeatsInput").value;
+                    if ( val > this.max || val == otherVal ) { return false; }
+                    else { return true; }
+                  }
+                }
+          </script>
+        </summary>
+        Сколько долей во втором ритме
+      </details>
+    </div>
+  </div>
+  <script type="text/javascript" src="scripts/main.js"></script>
+  <script>
+    const canvas = document.getElementById("myCanvas");
+    const context = canvas.getContext('2d');
+
+    const tempoInput = document.getElementById("tempoInput");
+    const firstBeatsInput = document.getElementById("firstBeatsInput");
+    const secondBeatsInput = document.getElementById("secondBeatsInput");
+
+    let canvas_reference;
+    if (CanvasRef.instance != null)
+    {
+      canvas_reference = new CanvasRef();
+      canvas_reference.canvas = canvas;
+    }
+    else
+      canvas_reference = new CanvasRef(canvas)
+
+    Drawer.initialize();
+    let theme = new Theme();
+
+    let g_petronom = null;
+    g_petronom = Petronom.createPetronom(tempoInput.value, firstBeatsInput.value, secondBeatsInput.value);
+    //g_metronom.start(80);
+
+    function getMetronomRef() { return g_petronom; }
+    function setMetronomRef(metronom) { g_petronom = metronom; }
+
+    const startButton = document.getElementById("startButton");
+    startButton.addEventListener("click", function()
+    {
+      let newMetronom = Petronom.PlayButtonPress(getMetronomRef(), tempoInput.value, firstBeatsInput.value, secondBeatsInput.value);
+      setMetronomRef(newMetronom);
+    });
+
+    window.addEventListener("resize", function(event) {getMetronomRef().redrawAllCircles();});
+
+    tempoInput.onchange = function()
+    {
+      if (getMetronomRef().active)
+      {
+        if ( getMetronomRef().tempo != tempoInput.value )
+        getMetronomRef().tempo = tempoInput.value;
+      }
+    }
+
+    firstBeatsInput.onchange = function()
+    {
+      if (getMetronomRef().active)
+      {
+        if ( getMetronomRef().firstBeat != firstBeatsInput.value )
+        setMetronomRef(Petronom.BeatsChanged(getMetronomRef(), firstBeatsInput.value, secondBeatsInput.value));
+      }
+    }
+
+    secondBeatsInput.onchange = function()
+    {
+      if (getMetronomRef().active)
+      {
+        if ( getMetronomRef().secondBeat != secondBeatsInput.value )
+        setMetronomRef(Petronom.BeatsChanged(getMetronomRef(), firstBeatsInput.value, secondBeatsInput.value));
+      }
+    }
+
+  </script>
+</body>
+</html>

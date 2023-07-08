@@ -1,19 +1,55 @@
 "use strict";
-const canvas = document.getElementById("myCanvas");
-const context = canvas.getContext('2d');
 
-function drawArc(xPos, yPos, radius, startAngle, endAngle, lineWidth, anticlockwise, lineColor, fillColor)
+class Drawer
 {
-  startAngle = startAngle * (Math.PI/180);
-  endAngle = endAngle * (Math.PI/180);
-  radius = radius;
-  context.strokeStyle = lineColor;
-  context.fillStyle = fillColor;
-  context.lineWidth = lineWidth;
-  context.beginPath();
-  context.arc(xPos, yPos, radius, startAngle, endAngle, anticlockwise);
-  context.fill();
-  context.stroke();
+  static #canvas_ref;
+  static #context;
+
+  static initialize()
+  {
+    this.#canvas_ref = new CanvasRef();
+    this.#context = this.#canvas_ref.context;
+  }
+
+  static drawArc(xPos, yPos, radius, startAngle, endAngle, lineWidth, anticlockwise, lineColor, fillColor)
+  {
+    startAngle = startAngle * (Math.PI/180);
+    endAngle = endAngle * (Math.PI/180);
+    radius = radius;
+
+    this.#context.strokeStyle = lineColor;
+    this.#context.fillStyle = fillColor;
+    this.#context.lineWidth = lineWidth;
+    this.#context.beginPath();
+    this.#context.arc(xPos, yPos, radius, startAngle, endAngle, anticlockwise);
+    this.#context.fill();
+    this.#context.stroke();
+  }
+
+  static drawCurvesBetweenCircles(controlX, controlY, startX, startY, beatsArray)
+  {
+    const theme = new Theme();
+
+    this.#context.beginPath();
+    this.#context.moveTo(startX, startY);
+    this.#context.lineWidth = 2;
+    this.#context.strokeStyle = theme.lineColor;
+    this.#context.fillStyle = theme.fillColor;
+
+    for(let i = 1; i < beatsArray.length; i++)
+    {
+      let endX = beatsArray[i].xPos;
+      let endY = beatsArray[i].yPos;
+      this.#context.quadraticCurveTo(controlX, controlY, endX, endY);
+    }
+    if (beatsArray.length >= 2)
+    {
+      this.#context.quadraticCurveTo(controlX, controlY, startX, startY);
+      this.#context.closePath();
+      this.#context.fill();
+      this.#context.stroke();
+    }
+  }
 }
 
 class SoundStruct
@@ -55,19 +91,19 @@ class SoundStruct
 
 class Theme
 {
-  fillColor = "DarkBlue";
-  lineColor = "MediumSlateBlue";
-  baseColor = "MediumSlateBlue";
-  baseHighlightedColor = "LightSeaGreen";
-  alternateColor = "Moccasin";
-  alternateHighlightedColor = "Gold";
-  mutedColor = "DimGray";
+  fillColor;
+  lineColor;
+  baseColor;
+  baseHighlightedColor;
+  alternateColor;
+  alternateHighlightedColor;
+  mutedColor;
 
-  standartSound = SoundStruct.getStandartSound();
-  accentedSound = SoundStruct.getAccentedSound();
-  alternateSound = SoundStruct.getAlternateSound();
-  alternatedAccentedSound = SoundStruct.getAlternateAccentedSound();
-  tickSound = SoundStruct.getTickSound();
+  standartSound;
+  accentedSound;
+  alternateSound;
+  alternatedAccentedSound;
+  tickSound;
 
   constructor()
   {
@@ -77,6 +113,19 @@ class Theme
     }
 
     Theme._instance = this;
+    this.fillColor = "DarkBlue";
+    this.lineColor = "MediumSlateBlue";
+    this.baseColor = "MediumSlateBlue";
+    this.baseHighlightedColor = "LightSeaGreen";
+    this.alternateColor = "Moccasin";
+    this.alternateHighlightedColor = "Gold";
+    this.mutedColor = "DimGray";
+
+    this.standartSound = SoundStruct.getStandartSound();
+    this.accentedSound = SoundStruct.getAccentedSound();
+    this.alternateSound = SoundStruct.getAlternateSound();
+    this.alternatedAccentedSound = SoundStruct.getAlternateAccentedSound();
+    this.tickSound = SoundStruct.getTickSound();
   }
 }
 
@@ -125,8 +174,22 @@ class CanvasRef
     this.#context_ref.clearRect(0, 0, this.#canvas_ref.width, this.#canvas_ref.height);
   }
 
+  get instance()
+  {
+    if (CanvasRef._instance)
+    {
+      return CanvasRef._instance;
+    }
+    return null;
+  }
+
   get context() { return this.#context_ref; }
   get canvas() { return this.#canvas_ref; }
+  set canvas(canvas)
+  {
+    this.#canvas_ref = canvas;
+    this.#context_ref = canvas.getContext('2d');
+  }
 }
 
 class AudioPlayer
@@ -201,7 +264,7 @@ class Circle
   {
     if (!this.drawn)
     {
-      drawArc(this.#xPos, this.#yPos, this.#radius, 0, 360, this.#lineWidth, false, this.#lineColor, this.#fillColor);
+      Drawer.drawArc(this.#xPos, this.#yPos, this.#radius, 0, 360, this.#lineWidth, false, this.#lineColor, this.#fillColor);
       this.#drawn = true;
     }
   }
@@ -484,6 +547,7 @@ class Metronom
   #beats;
   #drawn = false;
   #active = false;
+  #created = false;
   #timer;
   constructor(tempo, beat, ticksPerBeat)
   {
@@ -493,9 +557,53 @@ class Metronom
 
     this.#beats = new loopedArray();
 
-    this.#createCircles();
+
   }
 
+  get tempo() { return this.#tempo; }
+  set tempo(value)
+  {
+    if (value < 0)
+    {
+      console.log("отрицательный темп");
+      return;
+    }
+    if ( value == 0 )
+    {
+      clearInterval(this.timer);
+      this.#tempo = 0;
+      return;
+    }
+
+    this.#tempo = value;
+    let time = this.getTimeBetweenBeats();
+    const ref = this;
+    this.timer = setInterval(() => ref.highlightNext(), time);
+
+  }
+  get beat() { return this.#beat; }
+  get ticks() { return this.#ticksPerBeat; }
+  set ticks(value)
+  {
+    this.#ticksPerBeat = value;
+  }
+  get active() { return this.#active; }
+  get timer() { return this.#timer; }
+  set timer(value)
+  {
+    if (this.#timer)
+      clearInterval(this.#timer);
+    this.#timer = value;
+  }
+  get beatsArray() { return this.#beats.getArray(); }
+  get centerX() { return this.#mainCircle.xPos; }
+  get centerY() { return this.#mainCircle.yPos; }
+  get mainRadius() { return this.#mainCircle.radius; }
+
+  getTimeBetweenBeats()
+  {
+    return 60000 / this.#tempo;
+  }
   #addBeat(beat)
   {
     this.#beats.addElement(beat);
@@ -513,6 +621,11 @@ class Metronom
     if (this.#drawn == true){
       return;
     }
+    if (this.#created == false)
+    {
+      this.#createCircles();
+      this.#created = true;
+    }
     this.#mainCircle.Draw();
     this.drawCurves();
     for(let i = 0; i < this.#beats.length; i++)
@@ -528,40 +641,14 @@ class Metronom
       return;
 
     let beatsArray = this.#beats.getArray();
-    this.#drawCurvesBetweenCircles(beatsArray);
-  }
 
-  #drawCurvesBetweenCircles(beatsArray)
-  {
-    let controlX = this.#mainCircle.xPos;
-    let controlY = this.#mainCircle.yPos;
+    let controlX = this.centerX;
+    let controlY = this.centerY;
 
     let startX = controlX;
-    let startY = controlY - this.#mainCircle.radius;
+    let startY = controlY - this.mainRadius;
 
-    const canvas_ref = new CanvasRef();
-    const context_ref = canvas_ref.context;
-    const theme = new Theme();
-
-    context_ref.beginPath();
-    context_ref.moveTo(startX, startY);
-    context_ref.lineWidth = 2;
-    context_ref.strokeStyle = theme.lineColor;
-    context_ref.fillStyle = theme.fillColor;
-
-    for(let i = 1; i < beatsArray.length; i++)
-    {
-      let endX = beatsArray[i].xPos;
-      let endY = beatsArray[i].yPos;
-      context_ref.quadraticCurveTo(controlX, controlY, endX, endY);
-    }
-    if (beatsArray.length >= 2)
-    {
-      context_ref.quadraticCurveTo(controlX, controlY, startX, startY);
-      context_ref.closePath();
-      context_ref.fill();
-      context_ref.stroke();
-    }
+    Drawer.drawCurvesBetweenCircles(controlX, controlY, startX, startY, beatsArray);
   }
 
   redrawAllCircles()
@@ -659,15 +746,15 @@ class Metronom
   #createBeats()
   {
     let lineWidth = this.#mainCircle.lineWidth;
-    let mainRadius = this.#mainCircle.radius;
+    let mainRadius = this.mainRadius;
 
     let divider = 18;
     if (this.#beat >= 30)
       divider = divider + Math.floor((this.#beat - 30) / 5) * 2.5;
 
     let radius = mainRadius / divider;
-    let xCenter = this.#mainCircle.xPos;
-    let yCenter = this.#mainCircle.yPos;
+    let xCenter = this.centerX;
+    let yCenter = this.centerY;
 
     let multiplier = 360 / this.#beat;
 
@@ -677,9 +764,14 @@ class Metronom
       let xPos = xCenter + mainRadius * Math.cos(initial_arc);
       let yPos = yCenter + mainRadius * Math.sin(initial_arc);
 
-      let temp = new SoundedBeat(xPos, yPos, lineWidth, radius, new BaseBeatState());
-      this.#addBeat(temp)
+      let temp = this.createConcreteBeat(xPos, yPos, lineWidth, radius, i);
+      this.#addBeat(temp);
     }
+  }
+
+  createConcreteBeat(xPos, yPos, lineWidth, radius, index)
+  {
+    return new SoundedBeat(xPos, yPos, lineWidth, radius, new BaseBeatState());
   }
 
   #createMainCircle()
@@ -701,41 +793,6 @@ class Metronom
 
     return new Circle(xCenter, yCenter, lineWidth, radius, lineColor, fillColor);
   }
-  get tempo() { return this.#tempo; }
-  set tempo(value)
-  {
-    if (value < 0)
-    {
-      console.log("отрицательный темп");
-      return;
-    }
-    if ( value == 0 )
-    {
-      clearInterval(this.timer);
-      this.#tempo = 0;
-      return;
-    }
-
-    this.#tempo = value;
-    let time = 60000 / this.#tempo;
-    const ref = this;
-    this.timer = setInterval(() => ref.highlightNext(), time);
-
-  }
-  get beat() { return this.#beat; }
-  get ticks() { return this.#ticksPerBeat; }
-  set ticks(value)
-  {
-    this.#ticksPerBeat = value;
-  }
-  get active() { return this.#active; }
-  get timer() { return this.#timer; }
-  set timer(value)
-  {
-    if (this.#timer)
-      clearInterval(this.#timer);
-    this.#timer = value;
-  }
 
   static createMetronom(tempo, beats, ticks)
   {
@@ -743,92 +800,134 @@ class Metronom
     newMetronom.drawAll();
     return newMetronom;
   }
-}
 
-
-function BeatsChanged(metronom, beats)
-{
-  let tempo = metronom.tempo;
-  let ticks = metronom.ticks;
-  metronom.stop();
-  metronom.selfDestroy();
-  canvas_reference.clear();
-  let newMetronom = Metronom.createMetronom(tempo, beats, ticks);
-  newMetronom.start(newMetronom.tempo);
-  return newMetronom;
-}
-function PlayButtonPress(metronom, tempo, beats, ticks)
-{
-  let newMetronom = metronom;
-  if (newMetronom.beat != beats)
+  static BeatsChanged(metronom, beats)
   {
-    newMetronom = BeatsChanged(metronom, beats);
+    let tempo = metronom.tempo;
+    let ticks = metronom.ticks;
+    metronom.stop();
+    metronom.selfDestroy();
+    canvas_reference.clear();
+    let newMetronom = this.createMetronom(tempo, beats, ticks);
+    newMetronom.start(newMetronom.tempo);
     return newMetronom;
   }
-  else if ( newMetronom.active == true )
+
+  static PlayButtonPress(metronom, tempo, beats, ticks)
   {
-    newMetronom.stop();
+    let newMetronom = metronom;
+    if (newMetronom.beat != beats)
+    {
+      newMetronom = this.BeatsChanged(metronom, beats);
+      return newMetronom;
+    }
+    else if ( newMetronom.active == true )
+    {
+      newMetronom.stop();
+      return newMetronom;
+    }
+    newMetronom.ticks = ticks;
+    newMetronom.start(tempo);
     return newMetronom;
   }
-  newMetronom.ticks = ticks;
-  newMetronom.start(tempo);
-  return newMetronom;
+
 }
 
-
-const tempoInput = document.getElementById("tempoInput");
-const beatsInput = document.getElementById("beatsInput");
-const ticksInput = document.getElementById("ticksInput");
-
-
-let canvas_reference = new CanvasRef(canvas);
-let theme = new Theme();
-
-let g_metronom = null;
-g_metronom = Metronom.createMetronom(tempoInput.value, beatsInput.value, ticksInput.value);
-
-function getMetronomRef() { return g_metronom; }
-function setMetronomRef(metronom) { g_metronom = metronom; }
-
-
-const startButton = document.getElementById("startButton");
-startButton.addEventListener("click", function()
+class Petronom extends Metronom
 {
-  let newMetronom = PlayButtonPress(getMetronomRef(), tempoInput.value, beatsInput.value, ticksInput.value);
-  setMetronomRef(newMetronom);
-});
-
-canvas_reference.canvas.addEventListener("mousedown", function(event)
-{
-  let coordinates = canvas_reference.getMousePos(event);
-  g_metronom.checkForIntersections(coordinates["x"], coordinates["y"]);
-});
-
-window.addEventListener("resize", function(event) {g_metronom.redrawAllCircles();});
-
-tempoInput.onchange = function()
-{
-  if (g_metronom.active)
+  #firstBeat;
+  #secondBeat;
+  constructor(tempo, firstBeat, secondBeat)
   {
-    if ( g_metronom.tempo != tempoInput.value )
-      g_metronom.tempo = tempoInput.value;
+    let totalBeats = firstBeat * secondBeat;
+    super(tempo, totalBeats, 1);
+    this.#firstBeat = firstBeat;
+    this.#secondBeat = secondBeat;
   }
-}
 
-beatsInput.onchange = function()
-{
-  if (g_metronom.active)
+  get firstBeat() { return this.#firstBeat; }
+  get secondBeat() { return this.#secondBeat; }
+
+  createConcreteBeat(xPos, yPos, lineWidth, radius, index)
   {
-    if ( g_metronom.beats != beatsInput.value )
-      g_metronom = BeatsChanged(g_metronom, beatsInput.value);
+    if ( index % this.#firstBeat == 0 )
+    {
+      return new SoundedBeat(xPos, yPos, lineWidth, radius * 1.5, new AlternateBeatState());
+    }
+    else if ( index % this.#secondBeat == 0 )
+    {
+      return new SoundedBeat(xPos, yPos, lineWidth, radius * 1.5, new BaseBeatState());
+    }
+    else
+    {
+      return new Beat(xPos, yPos, lineWidth, radius, new BaseBeatState());
+    }
   }
-}
 
-ticksInput.onchange = function()
-{
-  if (g_metronom.active)
+  getTimeBetweenBeats()
   {
-    if ( g_metronom.ticks != ticksInput.value )
-      g_metronom.ticks = ticksInput.value;
+    return super.getTimeBetweenBeats() / this.#firstBeat;
+  }
+
+  drawCurves()
+  {
+    let firstBeatArr = new Array(this.#firstBeat);
+    let secondBeatArr = new Array(this.#secondBeat);
+
+    for ( let i = 1; i < this.beatsArray.length; i++ )
+    {
+      if ( i % this.#firstBeat == 0 )
+        firstBeatArr.push(this.beatsArray[i]);
+      if ( i % this.#secondBeat == 0 )
+        secondBeatArr.push(this.beatsArray[i]);
+    }
+
+    let startX = this.centerX;
+    let startY = this.centerY - this.mainRadius;
+
+    if (firstBeatArr.length < secondBeatArr.length)
+    {
+      Drawer.drawCurvesBetweenCircles(this.centerX, this.centerY, startX, startY, secondBeatArr);
+      Drawer.drawCurvesBetweenCircles(this.centerX, this.centerY, startX, startY, firstBeatArr);
+    }
+    else
+    {
+      Drawer.drawCurvesBetweenCircles(this.centerX, this.centerY, startX, startY, firstBeatArr);
+      Drawer.drawCurvesBetweenCircles(this.centerX, this.centerY, startX, startY, secondBeatArr);
+    }
+  }
+
+  static createPetronom(tempo, firstBeat, secondBeat)
+  {
+    let newPetronom = new Petronom(tempo, firstBeat, secondBeat);
+    newPetronom.drawAll();
+    return newPetronom;
+  }
+
+  static BeatsChanged(metronom, firstBeat, secondBeat)
+  {
+    let tempo = metronom.tempo;;
+    metronom.stop();
+    metronom.selfDestroy();
+    canvas_reference.clear();
+    let newMetronom = this.createPetronom(tempo, firstBeat, secondBeat);
+    newMetronom.start(newMetronom.tempo);
+    return newMetronom;
+  }
+
+  static PlayButtonPress(metronom, tempo, firstBeat, secondBeat)
+  {
+    let newMetronom = metronom;
+    if (newMetronom.firstBeat != firstBeat || newMetronom.secondBeat != secondBeat)
+    {
+      newMetronom = this.BeatsChanged(metronom, firstBeat, secondBeat);
+    }
+    else if ( newMetronom.active == true )
+    {
+      newMetronom.stop();
+      return newMetronom;
+    }
+    newMetronom.start(tempo);
+    return newMetronom;
   }
 }
