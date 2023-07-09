@@ -219,7 +219,7 @@ class AudioPlayer
   //volume of the tone. Default is 1, off is 0.
   //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
   //callback to use on end of tone
-  beep(duration = 10, frequency = 500, volume = 2, type = "sawtooth")
+  async beep(duration = 10, frequency = 500, volume = 2, type = "sawtooth")
   {
     this.#oscillator = this.#audioContext.createOscillator();
     this.#oscillator.connect(this.#gainNode);
@@ -260,7 +260,7 @@ class Circle
     return this.#drawn;
   }
 
-  Draw()
+  async Draw()
   {
     if (!this.drawn)
     {
@@ -274,39 +274,13 @@ class Circle
     this.#drawn = false;
   }
 
-  Redraw(fillColor, xPos = null, yPos = null, lineWidth = null, radius = null, lineColor = null)
+  async Redraw(fillColor, lineColor)
   {
-    let changed = false;
-    if (xPos != null){
-      this.#xPos = xPos;
-      changed = true;
-    }
-    if (yPos != null){
-      this.#yPos = yPos;
-      changed = true;
-    }
-    if (lineWidth != null){
-      this.#lineWidth = lineWidth;
-      changed = true;
-    }
-    if (radius != null){
-      this.#radius = radius;
-      changed = true;
-    }
-    if (lineColor != null){
-      this.#lineColor = lineColor;
-      changed = true;
-    }
-    if (fillColor != null){
-      this.#fillColor = fillColor;
-      changed = true;
-    }
+    this.#lineColor = lineColor;
+    this.#fillColor = fillColor;
 
-    if (changed == true)
-    {
-      this.Clear();
-      this.Draw();
-    }
+    this.Clear();
+    this.Draw();
   }
 
   intersects(xPos, yPos)
@@ -435,11 +409,6 @@ class Beat extends Circle
     this.Redraw(newBaseColor, newBaseColor);
   }
 
-  Redraw(newFillColor, newLineColor)
-  {
-    super.Redraw(newFillColor, undefined, undefined, undefined, undefined, newLineColor);
-  }
-
   doesMakeSound() { return false; }
 
   highlight()  // Возвращает True, если эта доля издаёт звук
@@ -451,12 +420,13 @@ class Beat extends Circle
     return this.doesMakeSound();
   }
 
-  makeNormal()
+  async makeNormal()
   {
-    if (this.beatState.makeNormal() == false)
+    const beatState = this.beatState
+    if (beatState.makeNormal() == false)
       return;
 
-    this.Redraw(this.beatState.baseColor, this.beatState.baseColor);
+    this.Redraw(beatState.baseColor, beatState.baseColor);
   }
 }
 
@@ -556,8 +526,6 @@ class Metronom
     this.#ticksPerBeat = ticksPerBeat;
 
     this.#beats = new loopedArray();
-
-
   }
 
   get tempo() { return this.#tempo; }
@@ -578,7 +546,7 @@ class Metronom
     this.#tempo = value;
     let time = this.getTimeBetweenBeats();
     const ref = this;
-    this.timer = setInterval(() => ref.highlightNext(), time);
+    this.timer = setInterval(async () => ref.highlightNext(), time);
 
   }
   get beat() { return this.#beat; }
@@ -670,7 +638,7 @@ class Metronom
     this.#clickBeat(beat);
   }
 
-  #clickBeat(beat)
+  async #clickBeat(beat)
   {
     if (beat.highlight())
     {
@@ -685,7 +653,7 @@ class Metronom
       let clickTime = 60000 / this.#tempo;
       for (let i = 1; i < this.ticks; i++)  //  Полудоли
       {
-        setTimeout(function() { player.beep(); }, clickTime / this.ticks * i);
+        setTimeout(async () => { player.beep(); }, clickTime / this.ticks * i);
       }
     }
   }
@@ -705,7 +673,7 @@ class Metronom
   selfDestroy()
   {
     if (this.#active == true)
-      this.start();
+      this.stop();
 
     this.clear();
   }
