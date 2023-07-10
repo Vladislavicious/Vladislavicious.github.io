@@ -225,12 +225,12 @@ class AudioPlayer
   }
 
   //time - when sound will be executed
-  //duration of the tone in seconds. Default is 0.01
+  //duration of the tone in seconds. Default is 0.005
   //frequency of the tone in hertz. default is 440
   //volume of the tone. Default is 1, off is 0.
   //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
   //callback to use on end of tone
-  async beep(time, duration = 0.01, frequency = 500, type = "sawtooth")
+  async beep(time, duration = 0.005, frequency = 500, type = "sawtooth")
   {
     let oscillator = this.#audioContext.createOscillator();
     oscillator.connect(this.#gainNode);
@@ -606,8 +606,8 @@ class Metronom
   {
     while (this.#nextNoteTime < this.#player.currentTime + this.#scheduleAheadTime )
     {
-      this.#nextNoteTime += this.#timeBetweenBeats;
       this.highlightNext();
+      this.#nextNoteTime += this.#timeBetweenBeats;
     }
   }
 
@@ -689,7 +689,7 @@ class Metronom
       let frequency = sound["frequency"];
       let type = sound["type"];
 
-      let duration = 0.01;
+      let duration = 0.005;
       this.#player.beep(this.#nextNoteTime, duration, frequency, type);
 
       for (let i = 1; i < this.ticks; i++)  //  Полудоли
@@ -811,10 +811,9 @@ class Metronom
     return newMetronom;
   }
 
-  static BeatsChanged(metronom, beats)
+  static BeatsChanged(metronom, beats, ticks)
   {
-    let tempo = metronom.tempo;
-    let ticks = metronom.ticks;
+    let tempo = metronom.tempo;;
     metronom.stop();
     metronom.selfDestroy();
     canvas_reference.clear();
@@ -828,7 +827,7 @@ class Metronom
     let newMetronom = metronom;
     if (newMetronom.beat != beats)
     {
-      newMetronom = this.BeatsChanged(metronom, beats);
+      newMetronom = this.BeatsChanged(metronom, beats, ticks);
       return newMetronom;
     }
     else if ( newMetronom.active == true )
@@ -916,7 +915,7 @@ class Petronom extends Metronom
 
   static BeatsChanged(metronom, firstBeat, secondBeat)
   {
-    let tempo = metronom.tempo;;
+    let tempo = metronom.tempo;
     metronom.stop();
     metronom.selfDestroy();
     canvas_reference.clear();

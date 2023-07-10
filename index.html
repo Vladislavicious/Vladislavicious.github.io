@@ -133,7 +133,7 @@
       if (getMetronomRef().active)
       {
         if ( getMetronomRef().beats != beatsInput.value )
-          setMetronomRef(Metronom.BeatsChanged(getMetronomRef(), beatsInput.value));
+          setMetronomRef(Metronom.BeatsChanged(getMetronomRef(), beatsInput.value, ticksInput.value));
       }
     }
 
