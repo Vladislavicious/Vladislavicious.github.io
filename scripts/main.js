@@ -197,6 +197,7 @@ class AudioPlayer
   #audioContext;
   #oscillator;
   #gainNode;
+  #currentTime;
   constructor()
   {
     if (AudioPlayer._instance)
@@ -211,7 +212,10 @@ class AudioPlayer
 
     this.#oscillator.connect(this.#gainNode);
     this.#gainNode.connect(this.#audioContext.destination);
+    this.#gainNode.gain.value = 2;
   }
+
+  get currentTime() { return this.#audioContext.currentTime; }
 
   //All arguments are optional:
   //duration of the tone in milliseconds. Default is 500
@@ -219,12 +223,11 @@ class AudioPlayer
   //volume of the tone. Default is 1, off is 0.
   //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
   //callback to use on end of tone
-  async beep(duration = 10, frequency = 500, volume = 2, type = "sawtooth")
+  async beep(duration = 10, frequency = 500, type = "sawtooth")
   {
     this.#oscillator = this.#audioContext.createOscillator();
     this.#oscillator.connect(this.#gainNode);
 
-    this.#gainNode.gain.value = volume;
     this.#oscillator.frequency.value = frequency;
     this.#oscillator.type = type;
 
@@ -515,6 +518,13 @@ class Metronom
   #ticksPerBeat;
   #mainCircle;
   #beats;
+  #timeBetweenBeats;
+  #scheduleAheadTime = 0.1; // How far ahead to schedule audio (sec)
+                      // This is calculated from lookahead, and overlaps
+                      // with next interval (in case the timer is late)
+  #lookAhead = 25;    // How frequently to call scheduling function
+                      //(in milliseconds)
+  #nextNoteTime;
   #drawn = false;
   #active = false;
   #created = false;
@@ -544,9 +554,13 @@ class Metronom
     }
 
     this.#tempo = value;
-    let time = this.getTimeBetweenBeats();
+    this.#timeBetweenBeats = this.getTimeBetweenBeats();
+
+    let player = new AudioPlayer();
+    this.#nextNoteTime = player.currentTime;
+
     const ref = this;
-    this.timer = setInterval(async () => ref.highlightNext(), time);
+    this.timer = setInterval(() => { ref.schedule(); }, this.#lookAhead);
 
   }
   get beat() { return this.#beat; }
@@ -568,9 +582,20 @@ class Metronom
   get centerY() { return this.#mainCircle.yPos; }
   get mainRadius() { return this.#mainCircle.radius; }
 
+  schedule()
+  {
+    let player = new AudioPlayer();
+    while (this.#nextNoteTime < player.currentTime + this.#scheduleAheadTime )
+    {
+      console.log("nextNote: " + this.#nextNoteTime);
+      console.log("cur: " + player.currentTime);
+      this.highlightNext();
+    }
+  }
+
   getTimeBetweenBeats()
   {
-    return 60000 / this.#tempo;
+    return 60 / this.#tempo;
   }
   #addBeat(beat)
   {
@@ -648,13 +673,17 @@ class Metronom
       let player = new AudioPlayer();
 
       let duration = 10;
-      player.beep(duration, frequency, 2, type);
+      player.beep(duration, frequency, type);
 
+      this.#nextNoteTime += this.#timeBetweenBeats;
+
+      /*
       let clickTime = 60000 / this.#tempo;
       for (let i = 1; i < this.ticks; i++)  //  Полудоли
       {
         setTimeout(async () => { player.beep(); }, clickTime / this.ticks * i);
       }
+      */
     }
   }
 
