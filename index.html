@@ -44,8 +44,10 @@
           </label>
         </div>
         <div class="tempo">
-            <span id="rangeValue">120</span>
+          <div class="rangeValue">
+            <span id="numb">120</span>
             <input class="range" type="range" value="120" min="1" max="300" id="tempoInput"></input>
+          </div>
         </div>
         <div class="plusing">
           <label class="side-button">
@@ -54,9 +56,6 @@
           <label class="side-button">
             <div id="plus5" class="side-b">+5</div>
           </label>
-        </div>
-        <div class="TempoLine">
-          <i>looooooong</i>
         </div>
         <div class="playButton">
           <div class="fake-player">
@@ -177,7 +176,7 @@
     }
     function adjustSlider(value)
     {
-      document.getElementById('rangeValue').innerHTML = value;
+      document.getElementById('numb').innerHTML = value;
     }
     function changeTempo(value)
     {
@@ -198,7 +197,14 @@
     document.getElementById("minus5").addEventListener("click", function(event) { changeTempo(-5); } );
 
     tempoInput.onchange = function (e) { changeTempo(0); adjustSlider(tempoInput.value); }
-    tempoInput.onmousemove = function(e) { adjustSlider(tempoInput.value); }
+    tempoInput.addEventListener("touchmove", function(e)
+    {
+      adjustSlider(tempoInput.value);
+    })
+    tempoInput.onmousemove = function(e)
+    {
+      adjustSlider(tempoInput.value);
+    }
 
     window.onmessage = function(e) { console.log(e); }
   </script>
