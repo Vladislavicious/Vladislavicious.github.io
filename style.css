@@ -1,3 +1,12 @@
+:root {
+	--button-height: 1rem;
+	--button-color: rgb(151, 9, 9);
+	--font-color: #112f4a;
+	--line-color: #112f4a;
+	--menu-hover-color: #BFE2FF;
+	--background-color: #fff2e1;
+}
+
 html, body {
   height: 100%;
 	width: 100%;
@@ -28,17 +37,8 @@ body {
 	display: block;
 	flex: 1;
 	min-height: 0;
-	background: #fff2e1;
+	background: var(--background-color);
 }
-
-.btn {
-	display: inline-block;
-	background: #8C959D;
-	color: #fff;
-	padding: 1rem 1.5rem;
-	text-decoration: none;
-	border-radius: 3px; 
- }
 
 #canvasRow {
 	flex: 3;
@@ -48,4 +48,281 @@ body {
   width: 100%;
 	height: 100%;
 	overflow: hidden;
+}
+
+/* Оформление панели */
+#side-checkbox {
+	display: none;
+}
+.side-panel {
+	position: fixed;
+	z-index: 999999;
+	top: 0;
+	left: -360px;
+	background: #337AB7;
+	transition: all 0.5s;
+	width: 320px;
+	height: 100vh;
+	box-shadow: 10px 0 20px rgba(0,0,0,0.4);
+	color: #FFF;
+	padding: 40px 20px;
+}
+.side-title {
+	color: var(--font-color);
+	font-size: 20px;
+	padding-bottom: 10px;
+	margin-bottom: 20px;
+	border-bottom: 2px solid var(--line-color);
+}
+
+
+/* Оформление кнопки на странице */
+.side-button-wr {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	padding-left: 0px;
+	margin-top: 0px;
+	text-align: center; /* Контейнер для кнопки, чтобы было удобнее ее разместить */
+}
+.side-button {
+	display: inline-block;
+}
+.side-button .side-b {
+	margin: 10px;
+	text-decoration: none;
+	position: relative;
+	font-size: 20px;
+	line-height: 20px;
+	padding: 12px 30px;
+	color: #FFF;
+	font-weight: bold;
+	text-transform: uppercase;
+	font-family: 'Roboto', Тahoma, sans-serif;
+	background: #337AB7;
+	cursor: pointer;
+	border: 2px solid var(--menu-hover-color);
+}
+.side-button .side-b:hover,
+.side-button .side-b:active,
+.side-button .side-b:focus {
+	color: #FFF;
+}
+.side-button .side-b:after,
+.side-button .side-b:before {
+	position: absolute;
+	height: 4px;
+	left: 50%;
+	bottom: -6px;
+	content: "";
+	transition: all 280ms ease-in-out;
+	width: 0;
+}
+.side-button .side-open:after,
+.side-button .side-open:before {
+	background: green;
+}
+
+.side-button .side-b:before {
+	top: -6px;
+}
+.side-button .side-b:hover:after,
+.side-button .side-b:hover:before {
+	width: 100%;
+	left: 0;
+}
+/* Переключатели кнопки 1 */
+
+#side-checkbox:checked + .side-panel + .side-button-wr .side-button .side-open {
+	display: none;
+}
+
+#side-checkbox:checked + .side-panel {
+	left: 0;
+}
+/* Оформление кнопки на панеле */
+.side-button-2 {
+	width: 40px;
+	height: 40px;
+	border-radius: 40px;
+	position: absolute;
+	z-index: 2;
+	top: 8px;
+	right: 8px;
+	margin: 20px auto;
+	cursor: pointer;
+}
+.side-button-2:before {
+	content: '+';
+	color: var(--line-color);
+	position: absolute;
+	z-index: 2;
+	transform: rotate(45deg);
+	font-size: 50px;
+	line-height: 1;
+	top: -5px;
+	left: 6px;
+	transition: all 0.3s cubic-bezier(0.77, 0, 0.2, 0.85);
+}
+.side-button-2:after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	border-radius: 100%;
+	background: var(--line-color);
+	z-index: 1;
+	transition: all 0.3s cubic-bezier(0.77, 0, 0.2, 0.85);
+	transform: scale(0.01);
+}
+.side-button-2:hover:after {
+	transform: scale(1);
+}
+.side-button-2:hover:before {
+	transform: scale(0.8) rotate(45deg);
+	color: var(--menu-hover-color);
+}
+
+.ref-container a {
+	background: linear-gradient(to right, var(--menu-hover-color) 0%, var(--menu-hover-color) 5px, transparent 5px);
+	background-repeat: repeat-x;
+	background-size: 100%;
+	color: var(--font-color);
+	padding-left: 10px;
+	text-decoration: none;
+}
+.ref-container a:hover {
+	background: linear-gradient(to right, var(--menu-hover-color) 0%, var(--menu-hover-color) 5px, transparent);
+}
+
+/* Стили нижних кнопок */
+
+.buttons-container {
+	display: flex;
+	flex-flow: column nowrap;
+	align-items: center;
+	padding: 2px 0px;
+}
+.higher-row {
+	display: flex;
+	min-height: 0;
+	margin: 0px 0px 2px 0px;
+	background: var(--background-color);
+}
+
+.first-col {
+	display: flex;
+	flex-flow: column nowrap;
+	border: solid;
+	margin: 0px 5px;
+ 	flex: 1 1 auto;
+	min-height: 0;
+	background: var(--background-color);
+}
+
+.first-col-item {
+	margin: 5px;
+ 	flex: 0 1 auto;
+}
+
+.second-col {
+	display: block;
+	border: solid;
+	margin: 0px 5px;
+	flex: 3 1 auto;
+	min-height: 0;
+	background: var(--background-color);
+}
+
+.third-col {
+	display: flex;
+	flex-flow: column nowrap;
+	border: solid;
+	margin: 0px 5px;
+ 	flex: 1 1 auto;
+	min-height: 0;
+	background: var(--background-color);
+}
+
+.third-col-item {
+	margin: 5px;
+ 	flex: 0 1 auto;
+}
+
+.lower-row {
+	display: flex;
+ 	align-content: space-between;
+	min-height: 0;
+	background: var(--background-color);
+}
+
+.lower-row-item {
+	display: block;
+	border: solid;
+	margin: 0px 5px;
+	flex: 1 1 auto;
+	min-height: 0;
+	background: var(--background-color);
+}
+
+
+
+.fake-player {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 4rem;
+	height: 4rem;
+	border: 0.2rem solid var(--line-color);
+	border-radius: 50%;
+	filter: drop-shadow(0 0 3.1rem rgba(255,255,255, 0.8));
+}
+
+button {
+	margin: 0;
+	padding: 0;
+}
+
+.play {
+	height: 0;
+	width: 0;
+	margin-left: calc(2 * 0.14 * var(--button-height));
+	background: none;
+	border: none;
+	border-top: var(--button-height) solid transparent;
+	border-bottom: var(--button-height) solid transparent;
+	border-left: calc(var(--button-height) * 2 * 0.86) solid var(--line-color);
+
+}
+
+.pause {
+	position: relative;
+	background: none;
+	border: none;
+	height: calc(var(--button-height) * 2);
+	width: calc(var(--button-height) * 2 * 0.86);
+}
+
+.pause:before,
+.pause:after {
+	content: "";
+	position: absolute;
+	top: 0;
+	height: 100%;
+	width: 33%;
+	background: var(--line-color);
+}
+
+.pause:before {
+	left: 0;
+}
+
+.pause:after {
+	right: 0;
+}
+
+.hidden {
+	display: none;
 }

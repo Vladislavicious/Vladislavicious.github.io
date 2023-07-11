@@ -432,12 +432,12 @@ class Beat extends Circle
 
   doesMakeSound() { return false; }
 
-  highlight()  // Возвращает True, если эта доля издаёт звук
+  highlight(timeDelay)  // Возвращает True, если эта доля издаёт звук
   {
     if (this.beatState.highlight() == false)
       return false;
 
-    this.Redraw(this.beatState.highlightedColor, this.beatState.highlightedColor);
+    setTimeout(() => this.Redraw(this.beatState.highlightedColor, this.beatState.highlightedColor), timeDelay);
     return this.doesMakeSound();
   }
 
@@ -683,7 +683,7 @@ class Metronom
 
   #clickBeat(beat)
   {
-    if (beat.highlight())
+    if (beat.highlight(this.#nextNoteTime - this.#player.currentTime))
     {
       let sound = beat.beatState.baseSound;
       let frequency = sound["frequency"];
@@ -797,7 +797,7 @@ class Metronom
       smallSide = xCenter;
     }
 
-    let radius = (smallSide - lineWidth) * 0.95;
+    let radius = (smallSide - lineWidth) * 0.90;
     let lineColor = theme.lineColor;
     let fillColor = theme.fillColor;
 
@@ -940,3 +940,4 @@ class Petronom extends Metronom
     return newMetronom;
   }
 }
+

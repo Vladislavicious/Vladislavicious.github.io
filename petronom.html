@@ -8,10 +8,26 @@
   <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
+
+  <!-- меню -->
+  <input type="checkbox" id="side-checkbox" />
+  <div class="side-panel">
+      <label class="side-button-2" for="side-checkbox"></label>
+      <div class="side-title">
+        <a>Навигация:</a>
+      </div>
+      <div class="ref-container">
+        <a href="index.html">Переход на метроном</a>
+      </div>
+  </div>
+  <div class="side-button-wr">
+      <label class="side-button" for="side-checkbox">
+          <div class="side-b side-open">Меню</div>
+      </label>
+  </div>
+
+  <!-- основная часть -->
   <div class="rows">
-    <div class="rows-item">
-      <a href="index.html" class="btn">Переход на главную</a>
-    </div>
     <div class="rows-item" id="canvasRow">
       <canvas id="myCanvas"></canvas>
     </div>
