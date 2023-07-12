@@ -44,9 +44,9 @@
           </label>
         </div>
         <div class="tempo">
-          <div class="rangeValue">
-            <span id="numb">120</span>
-            <input class="range" type="range" value="120" min="1" max="300" id="tempoInput"></input>
+          <div class="LabeledElement">
+            <span class="centeredNumber" id="numb">120</span>
+            <input class="LabeledRange" type="range" value="120" min="1" max="300" id="tempoInput"></input>
           </div>
         </div>
         <div class="plusing">
@@ -64,80 +64,16 @@
           </div>
         </div>
         <div class="beats">
-          <details>
-            <summary>
-              <input type="number" id="beatsInput" placeholder="Доли в такте" step="1" value="4" min="1" max="32" required>
-              <script>
-                document.getElementById("beatsInput").onkeypress =
-                  function (e) {
-                    var ev = e || window.event;
-                    if(ev.charCode < 48 || ev.charCode > 57) {
-                      return false; // not a digit
-                    } else if(this.value * 10 + ev.charCode - 48 > this.max) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                  }
-              </script>
-            </summary>
-            Сколько долей в такте
-          </details>
+          <div class="LabeledElement">
+            <span class="centeredLabel">Долей в такте</span>
+            <select class="LabeledSelect" id="beatSelector"></select>
+          </div>
         </div>
         <div class="ticks">
-          <details>
-            <summary>
-              <input type="number" id="ticksInput" placeholder="Ударов на долю" step="1" value="1" min="1" max="4" required>
-              <script>
-                document.getElementById("ticksInput").onkeypress =
-                  function (e) {
-                    var ev = e || window.event;
-                    if(ev.charCode < 48 || ev.charCode > 57) {
-                      return false; // not a digit
-                    } else if(this.value * 10 + ev.charCode - 48 > this.max) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                  }
-              </script>
-            </summary>
-            Сколько ударов приходится на долю
-          </details>
-          <!-- <select name="tickSelector" selected value="1">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-            <option value="11">11</option>
-            <option value="12">12</option>
-            <option value="13">13</option>
-            <option value="14">14</option>
-            <option value="15">15</option>
-            <option value="16">16</option>
-            <option value="17">17</option>
-            <option value="18">18</option>
-            <option value="19">19</option>
-            <option value="20">20</option>
-            <option value="21">21</option>
-            <option value="22">22</option>
-            <option value="23">23</option>
-            <option value="24">24</option>
-            <option value="25">25</option>
-            <option value="26">26</option>
-            <option value="27">27</option>
-            <option value="28">28</option>
-            <option value="29">29</option>
-            <option value="30">30</option>
-            <option value="31">31</option>
-            <option value="32">32</option>
-          </select> -->
+          <div class="LabeledElement">
+            <span class="centeredLabel">Ударов на долю</span>
+            <select class="LabeledSelect" id="tickSelector"></select>
+          </div>
         </div>
       </div>
     </div>
@@ -150,8 +86,35 @@
     const context = canvas.getContext('2d');
 
     const tempoInput = document.getElementById("tempoInput");
-    const beatsInput = document.getElementById("beatsInput");
-    const ticksInput = document.getElementById("ticksInput");
+    const tickSelector = document.getElementById("tickSelector");
+    const beatSelector = document.getElementById("beatSelector");
+
+    function addOption(select, value, text)
+    {
+      let option = document.createElement("option");
+      option.value = value;
+      option.text = text;
+      select.add(option);
+    }
+
+    function setSelectBoxByValue(select, eval)
+    {
+    select.value = eval;
+    }
+
+    for (let j = 1; j < 5; j++)
+    {
+      addOption(tickSelector, j, String(j));
+    }
+    setSelectBoxByValue(tickSelector, 1);
+
+    for (let k = 1; k < 33; k++)
+    {
+      addOption(beatSelector, k, String(k));
+    }
+    setSelectBoxByValue(beatSelector, 4);
+
+
 
 
     let canvas_reference;
@@ -167,7 +130,7 @@
     let theme = new Theme();
 
     let g_metronom;
-    g_metronom = Metronom.createMetronom(tempoInput.value, beatsInput.value, ticksInput.value);
+    g_metronom = Metronom.createMetronom(tempoInput.value, beatSelector.value, tickSelector.value);
 
     function getMetronomRef() { return g_metronom; }
     function setMetronomRef(metronom) { g_metronom = metronom; }
@@ -175,7 +138,7 @@
     const playButton = document.querySelector('.fake-player');
 
     function clickHandler () {
-        let newMetronom = Metronom.PlayButtonPress(getMetronomRef(), tempoInput.value, beatsInput.value, ticksInput.value);
+        let newMetronom = Metronom.PlayButtonPress(getMetronomRef(), tempoInput.value, beatSelector.value, tickSelector.value);
         setMetronomRef(newMetronom);
 
         const buttons = Array.from(this.children);
@@ -191,23 +154,24 @@
 
     window.addEventListener("resize", function(event) {getMetronomRef().redrawAllCircles();});
 
-    beatsInput.onchange = function()
+    beatSelector.onchange = function()
     {
       if (getMetronomRef().active)
       {
-        if ( getMetronomRef().beats != beatsInput.value )
-          setMetronomRef(Metronom.BeatsChanged(getMetronomRef(), beatsInput.value, ticksInput.value));
+        if ( getMetronomRef().beats != beatSelector.value )
+          setMetronomRef(Metronom.BeatsChanged(getMetronomRef(), beatSelector.value, tickSelector.value));
       }
     }
 
-    ticksInput.onchange = function()
+    tickSelector.onchange = function()
     {
       if (getMetronomRef().active)
       {
-        if ( getMetronomRef().ticks != ticksInput.value )
-          getMetronomRef().ticks = ticksInput.value;
+        if ( getMetronomRef().ticks != tickSelector.value )
+          getMetronomRef().ticks = tickSelector.value;
       }
     }
+
     function adjustSlider(value)
     {
       document.getElementById('numb').innerHTML = value;

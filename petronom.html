@@ -32,68 +32,33 @@
       <canvas id="myCanvas"></canvas>
     </div>
     <div class="rows-item">
-      <details>
-        <summary>
-          <input type="number" id="tempoInput" placeholder="Темп метронома" step="1" value="120" min="1" max="300" required>
-          <script>
-            document.getElementById('tempoInput').onkeypress =
-              function (e) {
-                var ev = e || window.event;
-                if(ev.charCode < 48 || ev.charCode > 57) {
-                  return false; // not a digit
-                } else if(this.value * 10 + ev.charCode - 48 > this.max) {
-                   return false;
-                } else {
-                   return true;
-                }
-              }
-          </script>
-        </summary>
-        Сколько ударов в минуту
-      </details>
-      <button id="startButton" autofocus>Запуск</button>
-      <details>
-        <summary>
-          <input id="firstBeatsInput" placeholder="Доли в такте" step="1" value="3" min="1" max="12" required>
-          <script>
-            document.getElementById("firstBeatsInput").onkeypress =
-              function (e)
-                {
-                  var ev = e || window.event;
-                  if(ev.charCode < 48 || ev.charCode > 57) { return false; }// not a digit
-                  else
-                  {
-                    let val = this.value * 10 + ev.charCode - 48;
-                    let otherVal = document.getElementById("secondBeatsInput").value;
-                    if ( val > this.max || val == otherVal ) { return false; }
-                    else { return true; }
-                  }
-                }
-          </script>
-        </summary>
-        Сколько долей в первом ритме
-      </details>
-      <details>
-        <summary>
-          <input id="secondBeatsInput" placeholder="Доли в такте" step="1" value="4" min="1" max="12" required>
-          <script>
-            document.getElementById("secondBeatsInput").onkeypress =
-            function (e)
-                {
-                  var ev = e || window.event;
-                  if(ev.charCode < 48 || ev.charCode > 57) { return false; }// not a digit
-                  else
-                  {
-                    let val = this.value * 10 + ev.charCode - 48;
-                    let otherVal = document.getElementById("firstBeatsInput").value;
-                    if ( val > this.max || val == otherVal ) { return false; }
-                    else { return true; }
-                  }
-                }
-          </script>
-        </summary>
-        Сколько долей во втором ритме
-      </details>
+
+      <div class="petronom-buttons-all">
+      <div class="leftBeats">
+        <div class="LabeledElement">
+          <span class="centeredLabel">Ударов на левую руку</span>
+          <select class="LabeledSelect" id="firstBeatsInput"></select>
+        </div>
+      </div>
+      <div class="tempo">
+        <div class="LabeledElement">
+          <span class="centeredNumber" id="numb">120</span>
+          <input class="LabeledRange" type="range" value="120" min="1" max="200" id="tempoInput"></input>
+        </div>
+      </div>
+      <div class="rightBeats">
+        <div class="LabeledElement">
+          <span class="centeredLabel">Ударов на правую руку</span>
+          <select class="LabeledSelect" id="secondBeatsInput"></select>
+        </div>
+      </div>
+      <div class="playButton">
+        <div class="fake-player">
+          <button role="play" class="play"></button>
+          <button role="pause" class="pause hidden"></button>
+        </div>
+      </div>
+      </div>
     </div>
   </div>
   <script type="text/javascript" src="scripts/main.js"></script>
@@ -117,29 +82,74 @@
     Drawer.initialize();
     let theme = new Theme();
 
+    function addOption(select, value, text)
+    {
+      let option = document.createElement("option");
+      option.value = value;
+      option.text = text;
+      select.add(option);
+    }
+
+    function setSelectBoxByValue(select, eval)
+    {
+    select.value = eval;
+    }
+
+    for (let j = 1; j < 13; j++)
+    {
+      addOption(firstBeatsInput, j, String(j));
+    }
+    setSelectBoxByValue(firstBeatsInput, 4);
+
+    for (let k = 1; k < 13; k++)
+    {
+      addOption(secondBeatsInput, k, String(k));
+    }
+    setSelectBoxByValue(secondBeatsInput, 3);
+
     let g_petronom = null;
     g_petronom = Petronom.createPetronom(tempoInput.value, firstBeatsInput.value, secondBeatsInput.value);
-    //g_metronom.start(80);
 
     function getMetronomRef() { return g_petronom; }
     function setMetronomRef(metronom) { g_petronom = metronom; }
 
-    const startButton = document.getElementById("startButton");
-    startButton.addEventListener("click", function()
-    {
+    const playButton = document.querySelector('.fake-player');
+
+    function clickHandler () {
       let newMetronom = Petronom.PlayButtonPress(getMetronomRef(), tempoInput.value, firstBeatsInput.value, secondBeatsInput.value);
       setMetronomRef(newMetronom);
-    });
+
+        const buttons = Array.from(this.children);
+        buttons.forEach(playButton => playButton.classList.toggle('hidden'));
+    };
+    playButton.addEventListener('click', clickHandler);
 
     window.addEventListener("resize", function(event) {getMetronomRef().redrawAllCircles();});
 
-    tempoInput.onchange = function()
+    function adjustSlider(value)
     {
-      if (getMetronomRef().active)
+      document.getElementById('numb').innerHTML = value;
+    }
+    function changeTempo(value)
+    {
+      let prevValue = Number(tempoInput.value);
+      let newValue = prevValue + value;
+      if (newValue <= tempoInput.max && newValue >= tempoInput.min)
       {
-        if ( getMetronomRef().tempo != tempoInput.value )
-        getMetronomRef().tempo = tempoInput.value;
+        if (getMetronomRef().active)
+          getMetronomRef().tempo = newValue;
+        tempoInput.value = newValue;
+        adjustSlider(newValue);
       }
+    }
+    tempoInput.onchange = function (e) { changeTempo(0); adjustSlider(tempoInput.value); }
+    tempoInput.addEventListener("touchmove", function(e)
+    {
+      adjustSlider(tempoInput.value);
+    })
+    tempoInput.onmousemove = function(e)
+    {
+      adjustSlider(tempoInput.value);
     }
 
     firstBeatsInput.onchange = function()

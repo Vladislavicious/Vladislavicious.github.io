@@ -113,9 +113,9 @@ class Theme
     }
 
     Theme._instance = this;
-    this.fillColor = "DarkBlue";
-    this.lineColor = "MediumSlateBlue";
-    this.baseColor = "MediumSlateBlue";
+    this.fillColor = "#337ab7";
+    this.lineColor = "#112f4a";
+    this.baseColor = "#112f4a";
     this.baseHighlightedColor = "LightSeaGreen";
     this.alternateColor = "Moccasin";
     this.alternateHighlightedColor = "Gold";
@@ -940,4 +940,3 @@ class Petronom extends Metronom
     return newMetronom;
   }
 }
-
