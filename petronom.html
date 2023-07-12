@@ -33,12 +33,22 @@
     </div>
     <div class="rows-item">
 
-      <div class="petronom-buttons-all">
-      <div class="leftBeats">
-        <div class="LabeledElement">
-          <span class="centeredLabel">Ударов на левую руку</span>
-          <select class="LabeledSelect" id="firstBeatsInput"></select>
-        </div>
+      <div class="buttons-all">
+      <div class="minusing">
+        <label class="side-button">
+          <div id="minus1" class="side-b">-1</div>
+        </label>
+        <label class="side-button">
+          <div id="minus5" class="side-b">-5</div>
+        </label>
+      </div>
+      <div class="plusing">
+        <label class="side-button">
+          <div id="plus1" class="side-b">+1</div>
+        </label>
+        <label class="side-button">
+          <div id="plus5" class="side-b">+5</div>
+        </label>
       </div>
       <div class="tempo">
         <div class="LabeledElement">
@@ -46,9 +56,15 @@
           <input class="LabeledRange" type="range" value="120" min="1" max="200" id="tempoInput"></input>
         </div>
       </div>
+      <div class="leftBeats">
+        <div class="LabeledElement">
+          <span class="centeredLabel">Доли с акцентом</span>
+          <select class="LabeledSelect" id="firstBeatsInput"></select>
+        </div>
+      </div>
       <div class="rightBeats">
         <div class="LabeledElement">
-          <span class="centeredLabel">Ударов на правую руку</span>
+          <span class="centeredLabel">Обычные доли</span>
           <select class="LabeledSelect" id="secondBeatsInput"></select>
         </div>
       </div>
@@ -169,6 +185,11 @@
         setMetronomRef(Petronom.BeatsChanged(getMetronomRef(), firstBeatsInput.value, secondBeatsInput.value));
       }
     }
+
+    document.getElementById("plus1").addEventListener("click", function(event) { changeTempo(1); } );
+    document.getElementById("plus5").addEventListener("click", function(event) { changeTempo(5); } );
+    document.getElementById("minus1").addEventListener("click", function(event) { changeTempo(-1); } );
+    document.getElementById("minus5").addEventListener("click", function(event) { changeTempo(-5); } );
 
   </script>
 </body>

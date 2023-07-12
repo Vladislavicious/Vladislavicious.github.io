@@ -318,43 +318,18 @@ button:hover {
 	align-self: center;
 }
 
-.petronom-buttons-all
-{
-	height: 100%;
-	display: grid;
-  grid-template-columns: 1fr 1fr 0.5fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 0.2rem 0.3rem;
-  grid-auto-flow: row;
-	justify-content: space-around;
-}
-
-.petronom-buttons-all .tempo
-{
-	grid-area: 1 / 2 / 2 / 5;
-	justify-items: center;
-	align-self: center;
-	margin-top: 0rem;
-	margin-bottom: 1rem;
-}
-
 .rightBeats
 {
-	grid-area: 1 / 5 / 2 / 6;
-	justify-self: start;
+	grid-area: 2 / 6 / 3 / 7;
+	justify-self: center;
 	align-self: center;
 }
 
 .leftBeats
 {
-	grid-area: 1 / 1 / 2 / 2;
-	justify-self: end;
+	grid-area: 2 / 2 / 3 / 3;
+	justify-self: center;
 	align-self: center;
-}
-
-.petronom-buttons-all .playButton
-{
-	grid-area: 2 / 2 / 3 / 5;
 }
 
 /*  */
