@@ -56,36 +56,38 @@ class SoundStruct
 {
   frequency;
   type;
+  volume
 
-  constructor(frequency, type)
+  constructor(frequency, type, volume = 1)
   {
     this.frequency = frequency;
     this.type = type;
+    this.volume = volume;
   }
 
   static getStandartSound()
   {
-    return new SoundStruct(500, "sine");
+    return new SoundStruct(220, "sine", 1);
   }
 
   static getAccentedSound()
   {
-    return new SoundStruct(800, "sine");
+    return new SoundStruct(800, "sine", 1);
   }
 
   static getAlternateSound()
   {
-    return new SoundStruct(500, "square");
+    return new SoundStruct(440, "sine", 1);
   }
 
   static getAlternateAccentedSound()
   {
-    return new SoundStruct(800, "square");
+    return new SoundStruct(800, "square", 1);
   }
 
   static getTickSound()
   {
-    return new SoundStruct(500, "sawtooth");
+    return new SoundStruct(660, "sine", 1);
   }
 }
 
@@ -194,6 +196,7 @@ class CanvasRef
 
 class AudioPlayer
 {
+  duration = 0.01;
   #audioContext;
   #gainNode;
   #oscillators = new Array(8);
@@ -212,6 +215,9 @@ class AudioPlayer
 
     this.#gainNode.connect(this.#audioContext.destination);
     this.#gainNode.gain.value = 2;
+
+    let convolver = this.#audioContext.createConvolver();
+    convolver.connect(this.#gainNode);
   }
 
   get currentTime() { return this.#audioContext.currentTime; }
@@ -230,8 +236,9 @@ class AudioPlayer
   //volume of the tone. Default is 1, off is 0.
   //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
   //callback to use on end of tone
-  async beep(time, duration = 0.005, frequency = 500, type = "sawtooth")
+  async beep(time, duration = this.duration, frequency = 660, type = "sine", volume = 0.5)
   {
+    this.#gainNode.gain.value = volume;
     let oscillator = this.#audioContext.createOscillator();
     oscillator.connect(this.#gainNode);
     this.addOscillator(oscillator);
@@ -688,9 +695,9 @@ class Metronom
       let sound = beat.beatState.baseSound;
       let frequency = sound["frequency"];
       let type = sound["type"];
+      let volume = sound["volume"];
 
-      let duration = 0.005;
-      this.#player.beep(this.#nextNoteTime, duration, frequency, type);
+      this.#player.beep(this.#nextNoteTime, this.#player.duration, frequency, type, volume);
 
       for (let i = 1; i < this.ticks; i++)  //  Полудоли
       {

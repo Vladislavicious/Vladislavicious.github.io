@@ -428,7 +428,7 @@ select {
 select option {
 	color: inherit;
 	background-color: var(--menu-background-color);
-	
+
 }
 
 select:focus {
