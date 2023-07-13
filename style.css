@@ -5,7 +5,7 @@
 	--menu-hover-color: #BFE2FF;
 	--background-color: #85abf8;
 	--menu-background-color: #337AB7;
-	font-family: 'Roboto', Тahoma, sans-serif;
+	--font-family: 'Roboto', Тahoma, sans-serif;
 }
 
 html, body {
@@ -107,7 +107,7 @@ button:hover {
 	color: var(--font-color);
 	font-weight: bold;
 	text-transform: uppercase;
-	font-family: 'Roboto', Тahoma, sans-serif;
+	font-family: var(--font-family);
 	background: var(--menu-background-color);
 	cursor: pointer;
 	border: 2px solid var(--line-color);
@@ -413,7 +413,9 @@ input[type=range]::-moz-range-track {
 select {
   appearance: none;
   outline: 0;
-  font: inherit;
+  font-weight: bold;
+	font-size: 1rem;
+	font-family: var(--font-family);
   width: 4rem;
   height: 2rem;
   padding: 0 1rem 0 1rem;
@@ -426,6 +428,7 @@ select {
 }
 
 select option {
+	font: inherit;
 	color: inherit;
 	background-color: var(--menu-background-color);
 

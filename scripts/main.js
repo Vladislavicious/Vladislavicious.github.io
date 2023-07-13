@@ -254,6 +254,8 @@ class AudioPlayer
   {
     for (let i = 0; i < this.#oscCount; i++)
     {
+      if (i == this.#oscIndex)
+        continue;
       let osc = this.#oscillators[i];
       if (osc)
         osc.stop(0);
@@ -584,7 +586,7 @@ class Metronom
     this.#tempo = value;
     this.#timeBetweenBeats = this.getTimeBetweenBeats();
 
-    this.#nextNoteTime = this.#player.currentTime;
+    this.#nextNoteTime = this.#player.currentTime + this.#timeBetweenBeats;
 
     const ref = this;
     this.timer = setInterval(() => { ref.schedule(); }, this.#lookAhead);
