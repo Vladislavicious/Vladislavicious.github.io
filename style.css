@@ -3,7 +3,7 @@
 	--font-color: #112f4a;
 	--line-color: #112f4a;
 	--menu-hover-color: #BFE2FF;
-	--background-color: #fff2e1;
+	--background-color: #85abf8;
 	--menu-background-color: #337AB7;
 	font-family: 'Roboto', Тahoma, sans-serif;
 }
@@ -110,7 +110,7 @@ button:hover {
 	font-family: 'Roboto', Тahoma, sans-serif;
 	background: var(--menu-background-color);
 	cursor: pointer;
-	border: 2px solid #BFE2FF;
+	border: 2px solid var(--line-color);
 	outline: 1px solid;
 	outline-color: var(--menu-background-color);
 	outline-offset: 0px;
@@ -362,10 +362,56 @@ button:hover {
 	cursor: pointer;
 }
 
+input[type="range"] {
+	appearance: none;
+  -webkit-appearance: none;
+  background: var(--background-color);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+	appearance: none;
+  -webkit-appearance: none;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 50%;
+  background: var(--font-color);
+}
+
+input[type="range"]::-moz-range-thumb {
+	appearance: none;
+  -webkit-appearance: none;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 50%;
+  background: var(--font-color);
+}
+
+input[type="range"]::-ms-thumb {
+	appearance: none;
+  -webkit-appearance: none;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 50%;
+  background: var(--font-color);
+}
+
+input[type=range]::-webkit-slider-runnable-track  {
+	appearance: none;
+  -webkit-appearance: none;
+  box-shadow: none;
+  border: none;
+}
+
+input[type=range]::-moz-range-track {
+	appearance: none;
+  -webkit-appearance: none;
+  box-shadow: none;
+  border: none;
+}
+
 /* <select> styles */
 select {
   appearance: none;
-  border: 0;
   outline: 0;
   font: inherit;
   width: 4rem;
@@ -375,12 +421,14 @@ select {
   color: var(--font-color);
   border-radius: 0.25rem;
   box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.2);
+	border: 2px solid var(--line-color);
   cursor: pointer;
 }
 
 select option {
 	color: inherit;
 	background-color: var(--menu-background-color);
+	
 }
 
 select:focus {
