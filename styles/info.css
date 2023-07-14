@@ -216,3 +216,27 @@ article h2
   font-size: 2.5rem;
   text-align: center;
 }
+
+@media screen and (max-width: 50rem) {
+  article h1
+  {
+    font-size: 2.5rem;
+    margin-top: -3rem;
+    padding: 1rem 1rem 0.5rem 1rem;
+  }
+
+  article h2
+  {
+    font-size: 1.5rem;
+    padding: 0.25rem 0px;
+  }
+
+	.side-panel {
+		left: -24rem;
+		width: 20rem;
+	}
+}
+
+@media screen and (max-width: 30rem) {
+  article h1 { font-size: 2rem;}
+}
