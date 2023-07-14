@@ -5,7 +5,7 @@
 	--menu-hover-color: #BFE2FF;
 	--background-color: #85abf8;
 	--menu-background-color: #337AB7;
-	--font-family: 'Fugaz One', cursive;
+	--font-family: 'Comic Sans MS', cursive;
 }
 
 html, body {
@@ -166,7 +166,7 @@ body {
 /* оформление сайта */
 
 header {
-  background-image: url(https://i.pinimg.com/originals/74/d8/26/74d826e3c6e0bfee337e36b0eae855e8.jpg);
+  background-image: url("../assets/Dream_Background.jpg");
   background-size: cover;
   background-repeat: no-repeat;
   width: 100%;
@@ -216,6 +216,19 @@ article h2
   font-size: 2.5rem;
   text-align: center;
 }
+
+article a {
+  background: linear-gradient(90deg, white 0%, var(--menu-hover-color) 35%, transparent);
+	background-repeat: repeat-x;
+	background-size: 100%;
+	color: var(--font-color);
+	text-decoration: none;
+}
+
+article a:hover {
+	background: linear-gradient(270deg, white 0%, var(--menu-hover-color) 35%, transparent);
+}
+
 
 @media screen and (max-width: 50rem) {
   article h1
