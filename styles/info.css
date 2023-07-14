@@ -1,0 +1,218 @@
+:root {
+	--button-height: 1rem;
+	--font-color: #112f4a;
+	--line-color: #112f4a;
+	--menu-hover-color: #BFE2FF;
+	--background-color: #85abf8;
+	--menu-background-color: #337AB7;
+	--font-family: 'Fugaz One', cursive;
+}
+
+html, body {
+  height: 100%;
+	width: 100%;
+}
+
+body {
+  min-height: 100%;
+  min-width: 100%;
+	margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  color: var(--font-color);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Оформление панели */
+#side-checkbox {
+	display: none;
+}
+.side-panel {
+	position: fixed;
+	z-index: 999999;
+	top: 0;
+	left: -36rem;
+	background: var(--menu-background-color);
+	transition: all 0.5s;
+	width: 32rem;
+	height: 100vh;
+	box-shadow: 1rem 0 2rem rgba(0,0,0,0.4);
+	color: var(--font-color);
+	padding: 4rem 2rem;
+}
+.side-panel-title {
+	color: var(--font-color);
+	font-size: 2rem;
+	padding-bottom: 1rem;
+	margin-bottom: 2rem;
+	border-bottom: 2px solid var(--line-color);
+}
+
+
+/* Оформление кнопки на странице */
+.custom-button-wrapper {
+	position: fixed;
+  z-index: 99999;
+	top: 0px;
+	left: 0px;
+	padding-left: 0px;
+	margin-top: 0px;
+	text-align: center; /* Контейнер для кнопки, чтобы было удобнее ее разместить */
+}
+.custom-button {
+	display: inline-block;
+}
+.custom-button .side-b {
+	display: inline-flex;
+	margin: 2px;
+	text-decoration: none;
+	position: relative;
+	font-size: 1.5rem;
+	line-height: 2rem;
+	padding: 0.5rem 1rem;
+	color: var(--font-color);
+	font-weight: bold;
+	text-transform: uppercase;
+	font-family: var(--font-family);
+	background: var(--menu-background-color);
+	cursor: pointer;
+	border: 2px solid var(--line-color);
+	outline: 1px solid;
+	outline-color: var(--menu-background-color);
+	outline-offset: 0px;
+	text-shadow: none;
+	transition: all 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+.custom-button .side-b:active,
+.custom-button .side-b:focus {
+	box-shadow: inset 0 0 2rem var(--menu-hover-color);
+	outline-color: rgba(255, 255, 255, 0);
+	outline-offset: 1.5rem;
+	color: var(--font-color);
+}
+
+
+
+
+/* Переключатели кнопки 1 */
+
+#side-checkbox:checked + .side-panel + .custom-button-wrapper .custom-button .side-open {
+	display: none;
+}
+
+#side-checkbox:checked + .side-panel {
+	left: 0;
+}
+/* Оформление кнопки на панеле */
+.exit-menu-button {
+	width: 4rem;
+	height: 4rem;
+	border-radius: 4rem;
+	position: absolute;
+	z-index: 2;
+	top: 0.8rem;
+	right: 0.8rem;
+	margin: 2rem auto;
+	cursor: pointer;
+}
+.exit-menu-button:before {
+	content: '+';
+	color: var(--line-color);
+	position: absolute;
+	z-index: 2;
+	transform: rotate(45deg);
+	font-size: 5rem;
+	line-height: 1;
+	top: -0.5rem;
+	left: 0.6rem;
+	transition: all 0.3s cubic-bezier(0.77, 0, 0.2, 0.85);
+}
+.exit-menu-button:after {
+	content: '';
+	position: absolute;
+	top: 0.13rem;
+	left: -0.35rem;
+	width: 100%;
+	height: 100%;
+	border-radius: 100%;
+	background: var(--line-color);
+	z-index: 1;
+	transition: all 0.3s cubic-bezier(0.77, 0, 0.2, 0.85);
+	transform: scale(0.01);
+}
+.exit-menu-button:hover:after {
+	transform: scale(1);
+}
+.exit-menu-button:hover:before {
+	transform: scale(0.8) rotate(45deg);
+	color: var(--menu-hover-color);
+}
+
+.ref-container a {
+	background: linear-gradient(to right, var(--menu-hover-color) 0%, var(--menu-hover-color) 0.5rem, transparent 0.5rem);
+	background-repeat: repeat-x;
+	background-size: 100%;
+	color: var(--font-color);
+	padding-left: 1rem;
+	text-decoration: none;
+}
+.ref-container a:hover {
+	background: linear-gradient(to right, var(--menu-hover-color) 0%, var(--menu-hover-color) 0.5rem, transparent);
+}
+
+/* оформление сайта */
+
+header {
+  background-image: url(https://i.pinimg.com/originals/74/d8/26/74d826e3c6e0bfee337e36b0eae855e8.jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 20rem;
+  position: sticky;
+  top: 0;
+  z-index: 0;
+}
+
+article
+{
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  background: var(--background-color);
+  padding: 2rem;
+}
+
+article p
+{
+  margin: 1rem 0px 0px 0px;
+}
+
+article h1
+{
+  margin-top: -5rem;
+  width: 100%;
+  padding: 2rem 2rem 1rem 2rem;
+  font-size: 4rem;
+  line-height: 4rem;
+  position: relative;
+  top: 0px;
+  backdrop-filter: blur(2rem);
+  background-image: linear-gradient(
+    to top,
+    rgba(black, 0.75),
+    rgba(black, 0.6)
+  );
+  color: var(--font-color);
+  text-shadow: .15rem .15rem 0 hsl(200 50% 30%);
+}
+
+article h2
+{
+  width: 100%;
+  padding: 0.5rem 0px;
+  font-size: 2.5rem;
+  text-align: center;
+}

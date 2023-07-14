@@ -5,7 +5,7 @@
 	--menu-hover-color: #BFE2FF;
 	--background-color: #85abf8;
 	--menu-background-color: #337AB7;
-	--font-family: 'Roboto', Тahoma, sans-serif;
+	--font-family: 'Fugaz One', cursive;
 }
 
 html, body {
@@ -16,6 +16,7 @@ body {
   min-height: 100%;
 	margin: 0;
   padding: 0;
+	font-family: var(--font-family);
 }
 
 button {
@@ -58,6 +59,11 @@ button:hover {
 	overflow: hidden;
 }
 
+.margin-space {
+	width: 100%;
+	height: 2rem;
+}
+
 /* Оформление панели */
 #side-checkbox {
 	display: none;
@@ -75,7 +81,7 @@ button:hover {
 	color: var(--font-color);
 	padding: 4rem 2rem;
 }
-.side-title {
+.side-panel-title {
 	color: var(--font-color);
 	font-size: 2rem;
 	padding-bottom: 1rem;
@@ -85,7 +91,7 @@ button:hover {
 
 
 /* Оформление кнопки на странице */
-.side-button-wr {
+.custom-button-wrapper {
 	position: fixed;
 	top: 0px;
 	left: 0px;
@@ -93,10 +99,10 @@ button:hover {
 	margin-top: 0px;
 	text-align: center; /* Контейнер для кнопки, чтобы было удобнее ее разместить */
 }
-.side-button {
+.custom-button {
 	display: inline-block;
 }
-.side-button .side-b {
+.custom-button .side-b {
 	display: inline-flex;
 	margin: 2px;
 	text-decoration: none;
@@ -117,8 +123,8 @@ button:hover {
 	text-shadow: none;
 	transition: all 1.5s cubic-bezier(0.19, 1, 0.22, 1);
 }
-.side-button .side-b:active,
-.side-button .side-b:focus {
+.custom-button .side-b:active,
+.custom-button .side-b:focus {
 	box-shadow: inset 0 0 2rem var(--menu-hover-color);
 	outline-color: rgba(255, 255, 255, 0);
 	outline-offset: 1.5rem;
@@ -130,7 +136,7 @@ button:hover {
 
 /* Переключатели кнопки 1 */
 
-#side-checkbox:checked + .side-panel + .side-button-wr .side-button .side-open {
+#side-checkbox:checked + .side-panel + .custom-button-wrapper .custom-button .side-open {
 	display: none;
 }
 
@@ -138,7 +144,7 @@ button:hover {
 	left: 0;
 }
 /* Оформление кнопки на панеле */
-.side-button-2 {
+.exit-menu-button {
 	width: 4rem;
 	height: 4rem;
 	border-radius: 4rem;
@@ -149,7 +155,7 @@ button:hover {
 	margin: 2rem auto;
 	cursor: pointer;
 }
-.side-button-2:before {
+.exit-menu-button:before {
 	content: '+';
 	color: var(--line-color);
 	position: absolute;
@@ -161,11 +167,11 @@ button:hover {
 	left: 0.6rem;
 	transition: all 0.3s cubic-bezier(0.77, 0, 0.2, 0.85);
 }
-.side-button-2:after {
+.exit-menu-button:after {
 	content: '';
 	position: absolute;
-	top: 0;
-	left: 0;
+	top: 0.13rem;
+	left: -0.35rem;
 	width: 100%;
 	height: 100%;
 	border-radius: 100%;
@@ -174,10 +180,10 @@ button:hover {
 	transition: all 0.3s cubic-bezier(0.77, 0, 0.2, 0.85);
 	transform: scale(0.01);
 }
-.side-button-2:hover:after {
+.exit-menu-button:hover:after {
 	transform: scale(1);
 }
-.side-button-2:hover:before {
+.exit-menu-button:hover:before {
 	transform: scale(0.8) rotate(45deg);
 	color: var(--menu-hover-color);
 }

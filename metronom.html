@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Metronom</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="styles/metronom.css">
+</head>
+<body>
+
+  <!-- меню -->
+
+  <input type="checkbox" id="side-checkbox" />
+  <div class="side-panel">
+      <label class="exit-menu-button" for="side-checkbox"></label>
+      <div class="side-panel-title">
+        <a>Навигация:</a>
+      </div>
+      <div class="ref-container">
+        <a href="index.html">Переход на главную</a>
+        <br>
+        <a href="petronom.html">Переход на петроном</a>
+      </div>
+  </div>
+  <div class="custom-button-wrapper">
+      <label class="custom-button" for="side-checkbox">
+          <div class="side-b side-open">Меню</div>
+      </label>
+  </div>
+
+  <!-- основная часть -->
+
+  <div class="rows">
+    <div class="rows-item" id="canvasRow">
+      <canvas id="myCanvas"></canvas>
+    </div>
+
+    <div class="rows-item">
+      <div class="buttons-all">
+        <div class="minusing">
+          <label class="custom-button">
+            <div id="minus1" class="side-b">-1</div>
+          </label>
+          <label class="custom-button">
+            <div id="minus5" class="side-b">-5</div>
+          </label>
+        </div>
+        <div class="tempo">
+          <div class="LabeledElement">
+            <span class="centeredNumber" id="numb">120</span>
+            <input class="LabeledRange" type="range" value="120" min="1" max="300" id="tempoInput"></input>
+          </div>
+        </div>
+        <div class="plusing">
+          <label class="custom-button">
+            <div id="plus1" class="side-b">+1</div>
+          </label>
+          <label class="custom-button">
+            <div id="plus5" class="side-b">+5</div>
+          </label>
+        </div>
+        <div class="playButton">
+          <div class="fake-player">
+            <button role="play" class="play"></button>
+            <button role="pause" class="pause hidden"></button>
+          </div>
+        </div>
+        <div class="beats">
+          <div class="LabeledElement">
+            <span class="centeredLabel">Долей в такте</span>
+            <select class="LabeledSelect" id="beatSelector"></select>
+          </div>
+        </div>
+        <div class="ticks">
+          <div class="LabeledElement">
+            <span class="centeredLabel">Ударов на долю</span>
+            <select class="LabeledSelect" id="tickSelector"></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+  <script type="text/javascript" src="scripts/main.js"></script>
+  <script>
+    const canvas = document.getElementById("myCanvas");
+    const context = canvas.getContext('2d');
+
+    const tempoInput = document.getElementById("tempoInput");
+    const tickSelector = document.getElementById("tickSelector");
+    const beatSelector = document.getElementById("beatSelector");
+
+    function addOption(select, value, text)
+    {
+      let option = document.createElement("option");
+      option.value = value;
+      option.text = text;
+      select.add(option);
+    }
+
+    function setSelectBoxByValue(select, eval)
+    {
+    select.value = eval;
+    }
+
+    for (let j = 1; j < 5; j++)
+    {
+      addOption(tickSelector, j, String(j));
+    }
+    setSelectBoxByValue(tickSelector, 1);
+
+    for (let k = 1; k < 33; k++)
+    {
+      addOption(beatSelector, k, String(k));
+    }
+    setSelectBoxByValue(beatSelector, 4);
+
+
+
+
+    let canvas_reference;
+    if (CanvasRef.instance != null)
+    {
+      canvas_reference = new CanvasRef();
+      canvas_reference.canvas = canvas;
+    }
+    else
+      canvas_reference = new CanvasRef(canvas)
+
+    Drawer.initialize();
+    let theme = new Theme();
+
+    let g_metronom;
+    g_metronom = Metronom.createMetronom(tempoInput.value, beatSelector.value, tickSelector.value);
+
+    function getMetronomRef() { return g_metronom; }
+    function setMetronomRef(metronom) { g_metronom = metronom; }
+
+    const playButton = document.querySelector('.fake-player');
+
+    function clickHandler () {
+        let newMetronom = Metronom.PlayButtonPress(getMetronomRef(), tempoInput.value, beatSelector.value, tickSelector.value);
+        setMetronomRef(newMetronom);
+
+        const buttons = Array.from(this.children);
+        buttons.forEach(playButton => playButton.classList.toggle('hidden'));
+    };
+    playButton.addEventListener('click', clickHandler);
+
+    canvas_reference.canvas.addEventListener("mousedown", function(event)
+    {
+      let coordinates = canvas_reference.getMousePos(event);
+      getMetronomRef().checkForIntersections(coordinates["x"], coordinates["y"]);
+    });
+
+    window.addEventListener("resize", function(event) {getMetronomRef().redrawAllCircles();});
+
+    beatSelector.onchange = function()
+    {
+      if (getMetronomRef().active)
+      {
+        if ( getMetronomRef().beats != beatSelector.value )
+          setMetronomRef(Metronom.BeatsChanged(getMetronomRef(), beatSelector.value, tickSelector.value));
+      }
+    }
+
+    tickSelector.onchange = function()
+    {
+      if (getMetronomRef().active)
+      {
+        if ( getMetronomRef().ticks != tickSelector.value )
+          getMetronomRef().ticks = tickSelector.value;
+      }
+    }
+
+    function adjustSlider(value)
+    {
+      document.getElementById('numb').innerHTML = value;
+    }
+    function changeTempo(value)
+    {
+      let prevValue = Number(tempoInput.value);
+      let newValue = prevValue + value;
+      if (newValue <= tempoInput.max && newValue >= tempoInput.min)
+      {
+        if (getMetronomRef().active)
+          getMetronomRef().tempo = newValue;
+        tempoInput.value = newValue;
+        adjustSlider(newValue);
+      }
+    }
+
+    document.getElementById("plus1").addEventListener("click", function(event) { changeTempo(1); } );
+    document.getElementById("plus5").addEventListener("click", function(event) { changeTempo(5); } );
+    document.getElementById("minus1").addEventListener("click", function(event) { changeTempo(-1); } );
+    document.getElementById("minus5").addEventListener("click", function(event) { changeTempo(-5); } );
+
+    tempoInput.onchange = function (e) { changeTempo(0); adjustSlider(tempoInput.value); }
+    tempoInput.addEventListener("touchmove", function(e)
+    {
+      adjustSlider(tempoInput.value);
+    })
+    tempoInput.onmousemove = function(e)
+    {
+      adjustSlider(tempoInput.value);
+    }
+
+    window.onmessage = function(e) { console.log(e); }
+  </script>
+</body>
+</html>

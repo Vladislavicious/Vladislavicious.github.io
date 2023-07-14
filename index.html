@@ -4,207 +4,61 @@
   <meta charset="UTF-8">
   <title>Metronom</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="stylesheet" type="text/css" href="styles/info.css">
 </head>
 <body>
-
   <!-- меню -->
 
   <input type="checkbox" id="side-checkbox" />
   <div class="side-panel">
-      <label class="side-button-2" for="side-checkbox"></label>
-      <div class="side-title">
+      <label class="exit-menu-button" for="side-checkbox"></label>
+      <div class="side-panel-title">
         <a>Навигация:</a>
       </div>
       <div class="ref-container">
+        <a href="metronom.html">Переход на метроном</a>
+        <br>
         <a href="petronom.html">Переход на петроном</a>
       </div>
   </div>
-  <div class="side-button-wr">
-      <label class="side-button" for="side-checkbox">
+  <div class="custom-button-wrapper">
+      <label class="custom-button" for="side-checkbox">
           <div class="side-b side-open">Меню</div>
       </label>
   </div>
 
   <!-- основная часть -->
+  <header>
+  </header>
+  <article>
+    <h1>Метроном: история и использование</h1>
 
-  <div class="rows">
-    <div class="rows-item" id="canvasRow">
-      <canvas id="myCanvas"></canvas>
-    </div>
+    <p><strong>Метроном</strong> - это музыкальный инструмент, который используется для <em>установки и поддержания определенного темпа</em> или ритма в музыке. Он представляет собой устройство, которое издает регулярные звуковые импульсы или метки, помогая музыкантам играть в нужном темпе.</p>
 
-    <div class="rows-item">
-      <div class="buttons-all">
-        <div class="minusing">
-          <label class="side-button">
-            <div id="minus1" class="side-b">-1</div>
-          </label>
-          <label class="side-button">
-            <div id="minus5" class="side-b">-5</div>
-          </label>
-        </div>
-        <div class="tempo">
-          <div class="LabeledElement">
-            <span class="centeredNumber" id="numb">120</span>
-            <input class="LabeledRange" type="range" value="120" min="1" max="300" id="tempoInput"></input>
-          </div>
-        </div>
-        <div class="plusing">
-          <label class="side-button">
-            <div id="plus1" class="side-b">+1</div>
-          </label>
-          <label class="side-button">
-            <div id="plus5" class="side-b">+5</div>
-          </label>
-        </div>
-        <div class="playButton">
-          <div class="fake-player">
-            <button role="play" class="play"></button>
-            <button role="pause" class="pause hidden"></button>
-          </div>
-        </div>
-        <div class="beats">
-          <div class="LabeledElement">
-            <span class="centeredLabel">Долей в такте</span>
-            <select class="LabeledSelect" id="beatSelector"></select>
-          </div>
-        </div>
-        <div class="ticks">
-          <div class="LabeledElement">
-            <span class="centeredLabel">Ударов на долю</span>
-            <select class="LabeledSelect" id="tickSelector"></select>
-          </div>
-        </div>
-      </div>
-    </div>
+    <h2>История метронома</h2>
 
+    <p>История появления метронома начинается в конце 18 века. В 1696 году французский композитор и теоретик музыки <ins>Жан-Батист Люлли</ins> предложил использовать удары молоточка на специальной деревянной платформе для помощи музыкантам в поддержании ритма. Это был первый шаг к созданию метронома.</p>
 
-  </div>
-  <script type="text/javascript" src="scripts/main.js"></script>
-  <script>
-    const canvas = document.getElementById("myCanvas");
-    const context = canvas.getContext('2d');
+    <p>Однако, настоящий метроном, как мы его знаем сегодня, был разработан и представлен в 1815 году немецким изобретателем и музыкантом <ins>Иоганном Маллетом</ins>. Он создал устройство, которое использовало механический маятник для измерения и отображения времени. Этот метроном имел регулируемую скорость и позволял музыкантам выбирать нужный темп для своей игры.</p>
 
-    const tempoInput = document.getElementById("tempoInput");
-    const tickSelector = document.getElementById("tickSelector");
-    const beatSelector = document.getElementById("beatSelector");
+    <h2>Эволюция метронома</h2>
 
-    function addOption(select, value, text)
-    {
-      let option = document.createElement("option");
-      option.value = value;
-      option.text = text;
-      select.add(option);
-    }
+    <p>С течением времени метрономы стали все более точными и удобными в использовании. В 1930-х годах появились электронные метрономы, которые использовали электрические импульсы вместо механических маятников. В настоящее время существуют различные типы метрономов, включая <em>механические</em>, <em>электронные</em> и, конечно, <em>мобильные приложения</em>.</p>
 
-    function setSelectBoxByValue(select, eval)
-    {
-    select.value = eval;
-    }
+    <h2>Использование метронома</h2>
 
-    for (let j = 1; j < 5; j++)
-    {
-      addOption(tickSelector, j, String(j));
-    }
-    setSelectBoxByValue(tickSelector, 1);
+    <p>Метрономы широко используются музыкантами <em>всех уровней и жанров</em>. Они помогают установить и поддерживать стабильный темп во время репетиций и выступлений. Метроном также полезен при обучении новых композиций, так как он позволяет музыканту разбить сложные ритмические фразы на более мелкие отрезки и упражняться в игре на медленных скоростях до достижения нужной техники и уверенности.</p>
 
-    for (let k = 1; k < 33; k++)
-    {
-      addOption(beatSelector, k, String(k));
-    }
-    setSelectBoxByValue(beatSelector, 4);
+    <p>Таким образом, метроном является важным инструментом для всех музыкантов, помогая им развивать свои навыки и играть в нужном темпе.</p>
 
+    <h2>Полиритмы</h2>
 
+    <p><strong>Полиритмы</strong> - это музыкальный прием, при котором <em>два или более ритмических цикла звучат одновременно</em>. Это может создавать сложные и интересные звуковые эффекты, но также может быть вызовом для музыкантов, особенно для начинающих.</p>
 
+    <p>Существует несколько способов обучения игре полиритмами. Один из них - это разбиение полиритма на отдельные компоненты и практика каждого компонента отдельно. Например, если полиритм состоит из двух ритмических циклов, то можно начать с практики каждого цикла по отдельности, а затем соединить их вместе. Это помогает музыканту лучше понять структуру полиритма и улучшить свою точность игры.</p>
 
-    let canvas_reference;
-    if (CanvasRef.instance != null)
-    {
-      canvas_reference = new CanvasRef();
-      canvas_reference.canvas = canvas;
-    }
-    else
-      canvas_reference = new CanvasRef(canvas)
+    <p>Другой способ - это использование метронома или драм-машины для практики полиритма. Метроном может быть настроен на различные скорости и ритмические циклы, что позволяет музыканту практиковать игру полиритма в различных условиях. Драм-машина может предоставить музыканту более интерактивный опыт, позволяя ему играть вместе с другими инструментами и создавать более сложные звуковые эффекты.</p>
+  </article>
 
-    Drawer.initialize();
-    let theme = new Theme();
-
-    let g_metronom;
-    g_metronom = Metronom.createMetronom(tempoInput.value, beatSelector.value, tickSelector.value);
-
-    function getMetronomRef() { return g_metronom; }
-    function setMetronomRef(metronom) { g_metronom = metronom; }
-
-    const playButton = document.querySelector('.fake-player');
-
-    function clickHandler () {
-        let newMetronom = Metronom.PlayButtonPress(getMetronomRef(), tempoInput.value, beatSelector.value, tickSelector.value);
-        setMetronomRef(newMetronom);
-
-        const buttons = Array.from(this.children);
-        buttons.forEach(playButton => playButton.classList.toggle('hidden'));
-    };
-    playButton.addEventListener('click', clickHandler);
-
-    canvas_reference.canvas.addEventListener("mousedown", function(event)
-    {
-      let coordinates = canvas_reference.getMousePos(event);
-      getMetronomRef().checkForIntersections(coordinates["x"], coordinates["y"]);
-    });
-
-    window.addEventListener("resize", function(event) {getMetronomRef().redrawAllCircles();});
-
-    beatSelector.onchange = function()
-    {
-      if (getMetronomRef().active)
-      {
-        if ( getMetronomRef().beats != beatSelector.value )
-          setMetronomRef(Metronom.BeatsChanged(getMetronomRef(), beatSelector.value, tickSelector.value));
-      }
-    }
-
-    tickSelector.onchange = function()
-    {
-      if (getMetronomRef().active)
-      {
-        if ( getMetronomRef().ticks != tickSelector.value )
-          getMetronomRef().ticks = tickSelector.value;
-      }
-    }
-
-    function adjustSlider(value)
-    {
-      document.getElementById('numb').innerHTML = value;
-    }
-    function changeTempo(value)
-    {
-      let prevValue = Number(tempoInput.value);
-      let newValue = prevValue + value;
-      if (newValue <= tempoInput.max && newValue >= tempoInput.min)
-      {
-        if (getMetronomRef().active)
-          getMetronomRef().tempo = newValue;
-        tempoInput.value = newValue;
-        adjustSlider(newValue);
-      }
-    }
-
-    document.getElementById("plus1").addEventListener("click", function(event) { changeTempo(1); } );
-    document.getElementById("plus5").addEventListener("click", function(event) { changeTempo(5); } );
-    document.getElementById("minus1").addEventListener("click", function(event) { changeTempo(-1); } );
-    document.getElementById("minus5").addEventListener("click", function(event) { changeTempo(-5); } );
-
-    tempoInput.onchange = function (e) { changeTempo(0); adjustSlider(tempoInput.value); }
-    tempoInput.addEventListener("touchmove", function(e)
-    {
-      adjustSlider(tempoInput.value);
-    })
-    tempoInput.onmousemove = function(e)
-    {
-      adjustSlider(tempoInput.value);
-    }
-
-    window.onmessage = function(e) { console.log(e); }
-  </script>
 </body>
 </html>
