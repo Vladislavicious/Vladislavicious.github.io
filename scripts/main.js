@@ -16,7 +16,6 @@ class Drawer
     startAngle = startAngle * (Math.PI/180);
     endAngle = endAngle * (Math.PI/180);
     radius = radius;
-
     this.#context.strokeStyle = lineColor;
     this.#context.fillStyle = fillColor;
     this.#context.lineWidth = lineWidth;
@@ -29,13 +28,11 @@ class Drawer
   static drawCurvesBetweenCircles(controlX, controlY, startX, startY, beatsArray)
   {
     const theme = new Theme();
-
     this.#context.beginPath();
     this.#context.moveTo(startX, startY);
     this.#context.lineWidth = 2;
     this.#context.strokeStyle = theme.lineColor;
     this.#context.fillStyle = theme.fillColor;
-
     for(let i = 1; i < beatsArray.length; i++)
     {
       let endX = beatsArray[i].xPos;
@@ -200,7 +197,7 @@ class AudioPlayer
   #audioContext;
   #gainNode;
   #oscillators = new Array(8);
-  #oscCount = 8;  //  Сколько максимум осциляторов
+  #oscCount = 8;  //  Максимальное число осцилляторов
   #oscIndex = 0;
   constructor()
   {
@@ -222,6 +219,30 @@ class AudioPlayer
 
   get currentTime() { return this.#audioContext.currentTime; }
 
+  //time - когда звук будет издан
+  //duration - длительность воспроизведения. Default = 0.5
+  //frequency - частота звука в Герцах.
+  //type - тип звуковой волны. Возможные варианты: sine, square, sawtooth, triangle, and custom. Default is sine.
+  //volume - громкость звука. Default is 1, выключенный = 0.
+  async beep(time, duration = this.duration, frequency = 660, type = "sine", volume = 0.5)
+  {
+    this.#gainNode.gain.value = volume;
+    this.#gainNode.gain.exponentialRampToValueAtTime(volume, time + duration);
+
+    let oscillator = this.#audioContext.createOscillator();
+    oscillator.connect(this.#gainNode);
+    this.addOscillator(oscillator);
+
+    oscillator.frequency.value = frequency / 4;
+    oscillator.frequency.exponentialRampToValueAtTime(frequency / 2, time + duration / 4);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency, time + duration * 3 / 4);
+    oscillator.type = type;
+
+    oscillator.start(time);
+    oscillator.stop(time + duration);
+  }
+
+
   addOscillator(oscillator)
   {
     this.#oscillators[this.#oscIndex] = oscillator;
@@ -229,27 +250,6 @@ class AudioPlayer
     if (this.#oscIndex >= this.#oscCount)
       this.#oscIndex = 0;
   }
-
-  //time - when sound will be executed
-  //duration of the tone in seconds. Default is 0.005
-  //frequency of the tone in hertz. default is 440
-  //volume of the tone. Default is 1, off is 0.
-  //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
-  //callback to use on end of tone
-  async beep(time, duration = this.duration, frequency = 660, type = "sine", volume = 0.5)
-  {
-    this.#gainNode.gain.value = volume;
-    let oscillator = this.#audioContext.createOscillator();
-    oscillator.connect(this.#gainNode);
-    this.addOscillator(oscillator);
-
-    oscillator.frequency.value = frequency;
-    oscillator.type = type;
-
-    oscillator.start(time);
-    oscillator.stop(time + duration);
-  }
-
   stopAll()
   {
     for (let i = 0; i < this.#oscCount; i++)
@@ -646,7 +646,6 @@ class Metronom
       this.#createCircles();
       this.#created = true;
     }
-    this.#mainCircle.Draw();
     this.drawCurves();
     for(let i = 0; i < this.#beats.length; i++)
     {
@@ -657,9 +656,6 @@ class Metronom
 
   drawCurves()
   {
-    if (this.#beat > 12)
-      return;
-
     let beatsArray = this.#beats.getArray();
 
     let controlX = this.centerX;
@@ -820,14 +816,13 @@ class Metronom
     return newMetronom;
   }
 
-  static BeatsChanged(metronom, beats, ticks)
+  static BeatsChanged(metronom, tempo, beats, ticks)
   {
-    let tempo = metronom.tempo;;
     metronom.stop();
     metronom.selfDestroy();
     canvas_reference.clear();
     let newMetronom = this.createMetronom(tempo, beats, ticks);
-    newMetronom.start(newMetronom.tempo);
+    newMetronom.start(tempo);
     return newMetronom;
   }
 
@@ -836,7 +831,7 @@ class Metronom
     let newMetronom = metronom;
     if (newMetronom.beat != beats)
     {
-      newMetronom = this.BeatsChanged(metronom, beats, ticks);
+      newMetronom = this.BeatsChanged(metronom, tempo, beats, ticks);
       return newMetronom;
     }
     else if ( newMetronom.active == true )
@@ -922,14 +917,13 @@ class Petronom extends Metronom
     return newPetronom;
   }
 
-  static BeatsChanged(metronom, firstBeat, secondBeat)
+  static BeatsChanged(metronom, tempo, firstBeat, secondBeat)
   {
-    let tempo = metronom.tempo;
     metronom.stop();
     metronom.selfDestroy();
     canvas_reference.clear();
     let newMetronom = this.createPetronom(tempo, firstBeat, secondBeat);
-    newMetronom.start(newMetronom.tempo);
+    newMetronom.start(tempo);
     return newMetronom;
   }
 
@@ -938,7 +932,7 @@ class Petronom extends Metronom
     let newMetronom = metronom;
     if (newMetronom.firstBeat != firstBeat || newMetronom.secondBeat != secondBeat)
     {
-      newMetronom = this.BeatsChanged(metronom, firstBeat, secondBeat);
+      newMetronom = this.BeatsChanged(metronom, tempo, firstBeat, secondBeat);
     }
     else if ( newMetronom.active == true )
     {

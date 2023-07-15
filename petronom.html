@@ -19,6 +19,7 @@
       <div class="ref-container">
         <a href="index.html">Переход на главную страницу</a>
         <br>
+        <br>
         <a href="metronom.html">Опробовать метроном</a>
       </div>
   </div>
@@ -175,7 +176,7 @@
       if (getMetronomRef().active)
       {
         if ( getMetronomRef().firstBeat != firstBeatsInput.value )
-        setMetronomRef(Petronom.BeatsChanged(getMetronomRef(), firstBeatsInput.value, secondBeatsInput.value));
+        setMetronomRef(Petronom.BeatsChanged(getMetronomRef(), tempoInput.value, firstBeatsInput.value, secondBeatsInput.value));
       }
     }
 
@@ -184,7 +185,7 @@
       if (getMetronomRef().active)
       {
         if ( getMetronomRef().secondBeat != secondBeatsInput.value )
-        setMetronomRef(Petronom.BeatsChanged(getMetronomRef(), firstBeatsInput.value, secondBeatsInput.value));
+        setMetronomRef(Petronom.BeatsChanged(getMetronomRef(), tempoInput.value, firstBeatsInput.value, secondBeatsInput.value));
       }
     }
 
